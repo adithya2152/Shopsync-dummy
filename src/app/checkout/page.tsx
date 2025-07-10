@@ -25,6 +25,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/components/AuthProvider";
 
 interface EnrichedCartItem {
   id: number;
@@ -51,6 +52,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [orderId, setOrderId] = useState<number | null>(null);
 
+  const { isAuthenticated } = useAuth();
 
   const paymentOptions = [
     {
@@ -69,8 +71,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const authRes = await axios.get("/api/auth/is_auth");
-        if (authRes.data.authenticated) {
+        if (isAuthenticated) {
           setNavType("customer");
 
           const userSettings = await axios.get("/api/user_settings");
@@ -81,6 +82,8 @@ export default function CheckoutPage() {
           setAddressLine2(addr.address_line2 || "");
           setCity(addr.city || "");
           setPinCode(addr.pin_code || "");
+        } else {
+          setNavType("landing");
         }
 
         const storedCart = localStorage.getItem("cart");
@@ -106,7 +109,7 @@ export default function CheckoutPage() {
     };
 
     fetchInitialData();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const refreshCart = async () => {

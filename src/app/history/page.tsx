@@ -12,6 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Nav from "@/components/Nav";
+import { useAuth } from "@/components/AuthProvider";
 
 // Types
 type OrderItem = {
@@ -36,29 +37,15 @@ type Order = {
 };
 
 export default function OrdersPage() {
-  const [navType, setNavType] = useState<"landing" | "customer">("landing");
   const [loading, setLoading] = useState(true);
-  const [, setAuthid] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const verifyAuth = async () => {
       try {
-        const cookieRes = await fetch("/api/get_user");
-        if (cookieRes.ok) {
-          const { id} = await cookieRes.json();
-          const authRes = await fetch("/api/auth/is_auth");
-
-          if (authRes.ok) {
-            const authData = await authRes.json();
-            if (authData.authenticated) {
-              setNavType("customer");
-              setAuthid(id);
-            }
-          }
-
+        if (isAuthenticated && user) {
           const ordersRes = await axios.get("/api/get_orders");
-
           setOrders(ordersRes.data);
         }
       } catch (err) {
@@ -69,12 +56,12 @@ export default function OrdersPage() {
     };
 
     verifyAuth();
-  }, []);
+  }, [isAuthenticated, user]);
 
   if (loading) {
     return (
       <>
-        <Nav navType={navType} />
+        <Nav navType={isAuthenticated ? "customer" : "landing"} />
         <Box textAlign="center" mt={6}>
           <CircularProgress />
         </Box>
@@ -84,7 +71,7 @@ export default function OrdersPage() {
 
   return (
     <>
-      <Nav navType={navType} />
+      <Nav navType={isAuthenticated ? "customer" : "landing"} />
       <Box sx={{ py: 4, px: 2 }}>
         <Typography variant="h4" gutterBottom>
           Your Orders

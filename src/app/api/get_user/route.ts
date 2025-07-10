@@ -3,21 +3,14 @@ import { supabase } from "@/util/supabase";
 
 export async function GET(req: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = req.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: "No authorization header found" }, { status: 401 });
+    // Get session from Supabase
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session?.user) {
+      return NextResponse.json({ error: "No active session" }, { status: 401 });
     }
 
-    const token = authHeader.split(' ')[1];
-
-    // Verify the token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
+    const user = session.user;
 
     return NextResponse.json({ 
       id: user.id, 

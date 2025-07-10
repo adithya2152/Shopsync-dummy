@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getAuthHeaders = () => {
-    if (user) {
+    if (user && user.access_token) {
       return { Authorization: `Bearer ${user.access_token}` };
     }
     return {};

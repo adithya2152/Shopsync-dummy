@@ -12,9 +12,9 @@ import {
   import { useState, useEffect } from "react";
   import Nav from "@/components/Nav";
   import axios from "axios";
+import { useAuth } from "@/components/AuthProvider";
   
   export default function SettingsPage() {
-    const [navType, setNavType] = useState<"landing" | "customer">("landing");
     const [loading, setLoading] = useState(true);
     const [username, setUsername] = useState("");
     const [houseNumber, setHouseNumber] = useState("");
@@ -25,29 +25,14 @@ import {
     const [successMsg, setSuccessMsg] = useState("");
     const [latitude, setLatitude] = useState("");
     const [longitude, setLongitude] = useState("");
-    const [authid, setAuthid] = useState("");
+    const { isAuthenticated, user } = useAuth();
   
     useEffect(() => {
       
       const verifyAuth = async () => {
         try {
-          // Step 1: Check user cookies
-          const cookieRes = await fetch("/api/get_user");
-          if (cookieRes.ok) {
-            const { id } = await cookieRes.json();
-            
-            const authRes = await fetch("/api/auth/is_auth");
-            
-            if (authRes.ok) {
-              const authData = await authRes.json();
-              if (authData.authenticated) {
-                setNavType("customer");
-              }
-            }
+          if (isAuthenticated && user) {
             axios.get("/api/user_settings", {
-              headers: {
-                authid: id
-              }
             }).then(({ data }) => {
             setUsername(data.username || "");
             const addr = data.homeLoc || {};
@@ -58,7 +43,6 @@ import {
             setPinCode(addr.pin_code || "");
             setLatitude(addr.latitude || null);
             setLongitude(addr.longitude || null);
-            setAuthid(id);
             setLoading(false);
             });
           }
@@ -70,7 +54,7 @@ import {
     
     
     verifyAuth();
-    }, []);
+    }, [isAuthenticated, user]);
   
     const handleSubmit = async () => {
       const payload = {
@@ -84,7 +68,6 @@ import {
           latitude: latitude || null,
           longitude: longitude || null
         },
-        authid: authid
       };
       const res = await axios.post("/api/user_settings", payload);
       if (res.status === 200) setSuccessMsg("Settings updated successfully!");
@@ -93,7 +76,7 @@ import {
     if (loading) {
       return (
         <>
-          <Nav navType={navType} />
+          <Nav navType={isAuthenticated ? "customer" : "landing"} />
           <Box textAlign="center" mt={6}>
             <CircularProgress />
           </Box>
@@ -103,7 +86,7 @@ import {
     
     return (
     <>
-    <Nav navType={navType} />
+    <Nav navType={isAuthenticated ? "customer" : "landing"} />
       <Card raised={true} sx={{ maxWidth: 500, mx: "auto", mt: 5, p: 4, backgroundColor: "rgba(255, 255, 255, 0.3)" }}>
         <Typography variant="h5" gutterBottom>
           User Settings
