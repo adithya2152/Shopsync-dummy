@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1751625895936,
+      "tag": "0000_unique_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751797789348,
+      "tag": "0001_shiny_patch",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751797970036,
+      "tag": "0002_careless_karen_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1751798764428,
+      "tag": "0003_small_chimera",
+      "breakpoints": true
+    }
+  ]
+}

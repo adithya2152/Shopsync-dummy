@@ -1,0 +1,1 @@
+ALTER TABLE "ShopSync_Products" ADD COLUMN "discount" numeric DEFAULT '0';
