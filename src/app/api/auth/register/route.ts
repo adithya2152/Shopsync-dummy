@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       long,
       role,
     });
-    //check if email already exists supabase auth table
+
     // ✅ **Check for missing fields**
     if (!username || !email || !password || !role) {
       return NextResponse.json(
@@ -24,7 +24,13 @@ export async function POST(req: Request) {
     }
 
     // ✅ **Create Supabase User**
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXTAUTH_URL}/auth/callback`
+      }
+    });
 
     if (error) {
       console.error("❌ Supabase Signup Error:", error.message);
@@ -65,29 +71,10 @@ export async function POST(req: Request) {
 
     console.log("✅ User inserted into DB");
 
-    // ✅ **Set authentication cookies**
-    const response = NextResponse.json(
-      { message: "User registered successfully" },
+    return NextResponse.json(
+      { message: "User registered successfully", user: user },
       { status: 201 }
     );
-
-    response.cookies.set("user", JSON.stringify({ id: user.id, email: user.email }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-
-    response.cookies.set("role", role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-
-    return response;
   } catch (error) {
     console.error("❌ Internal Server Error:", error);
     return NextResponse.json(

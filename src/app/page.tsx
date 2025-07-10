@@ -1,181 +1,3 @@
-// "use client";
-
-// import "../styles/landing.css";
-// import { useState, useEffect } from "react";
-// import axios from "axios";
-// import {
-//   Card,
-//   CardContent,
-//   CardActions,
-//   Button,
-//   Typography,
-//   Box,
-// } from "@mui/material";
-// import Nav from "@/components/Nav";
-// import "@/loaders/spinner.css";
-
-// type Category = {
-//   id: number;
-//   name: string;
-// };
-
-// type Shop = {
-//   id: number;
-//   name: string;
-// };
-
-// export default function Home() {
-//   const [loading, setLoading] = useState(true);
-//   const [isAuthenticated, setIsAuthenticated] = useState(false);
-//   const [categories, setCategories] = useState<Category[]>([]);
-//   const [shops, setShops] = useState<Shop[]>([]);
-
-//   useEffect(() => {
-//     const checkAuthFromCookies = async () => {
-//       try {
-//         const userRes = await axios.get("/api/get_user");
-//         const { id, email } = userRes.data;
-
-//         const authRes = await axios.post("/api/auth/is_auth", { id, email });
-//         setIsAuthenticated(authRes.data.authenticated);
-
-//         const cat = await axios.get("/api/get_categories");
-//         if (cat.status === 200) setCategories(cat.data);
-
-//         const shop = await axios.get("/api/get_shops");
-//         if (shop.status === 200) setShops(shop.data);
-//       } catch (err) {
-//         console.error("Failed to verify user:", err);
-//         setIsAuthenticated(false);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     checkAuthFromCookies();
-//   }, []);
-
-//   if (loading) return <div className="loader" />;
-
-//   return (
-//     <div>
-//       <Nav navType={isAuthenticated ? "customer" : "landing"} />
-
-//       {/* Welcome */}
-//       <section className="welcome">
-//         <h1>Welcome to ShopSync</h1>
-//         <p>Your One Stop Shop for All Your Shopping Needs</p>
-//       </section>
-
-//       {/* Categories */}
-//       <section className="Offers">
-//         <h2>Categories</h2>
-//         <div className="categories-container">
-//           {categories.map((category) => (
-//             <Box key={category.id}>
-//               <Card
-//                 raised
-//                 sx={{
-//                   backgroundColor: "var(--glass-bg)",
-//                   borderRadius: "var(--border-radius)",
-//                   backdropFilter: "blur(12px)",
-//                   height: "100%",
-//                   display: "flex",
-//                   flexDirection: "column",
-//                   justifyContent: "space-between",
-//                 }}
-//               >
-//                 <CardContent
-//                   sx={{
-//                     textAlign: "center",
-//                   }}
-//                 >
-//                   {/* <img
-//                     src={`/assets/categories/${category.name
-//                       .toLowerCase()
-//                       .replace(/\s/g, "_")}.jpg`}
-//                     alt={category.name}
-//                     style={{
-//                       width: "100%",
-//                       height: "120px",
-//                       objectFit: "cover",
-//                       borderRadius: "12px",
-//                       marginBottom: "10px",
-//                     }}
-//                   /> */}
-//                   <Typography variant="h5">{category.name}</Typography>
-//                   <Typography
-//                     variant="h6"
-//                     sx={{
-//                       fontSize: "0.875rem",
-//                       color: "text.secondary",
-//                       marginTop: "5px",
-//                     }}
-//                   >
-//                     Explore our {category.name} collection
-//                   </Typography>
-//                 </CardContent>
-//                 <CardActions sx={{ justifyContent: "center" }}>
-//                   <Button
-//                     size="small"
-//                     onClick={() =>
-//                       (window.location.href = `/category/${category.name.toLowerCase()}`)
-//                     }
-//                   >
-//                     Shop Now &gt;
-//                   </Button>
-//                 </CardActions>
-//               </Card>
-//             </Box>
-//           ))}
-//         </div>
-//       </section>
-
-//       {/* Shops */}
-//       <section className="Offers">
-//         <h2>Shops</h2>
-//         <div className="shops-container">
-//           {shops.map((shop) => (
-//             <Box key={shop.id}>
-//               <Card
-//                 raised
-//                 sx={{
-//                   backgroundColor: "var(--glass-bg)",
-//                   borderRadius: "var(--border-radius)",
-//                   backdropFilter: "blur(12px)",
-//                   height: "100%",
-//                 }}
-//               >
-//                 <CardContent
-//                   sx={{
-//                     minHeight: 130,
-//                     display: "flex",
-//                     flexDirection: "column",
-//                     justifyContent: "center",
-//                     textAlign: "center",
-//                   }}
-//                 >
-//                   <Typography variant="h5">{shop.name}</Typography>
-//                 </CardContent>
-//                 <CardActions sx={{ justifyContent: "center" }}>
-//                   <Button
-//                     size="small"
-//                     onClick={() =>
-//                       (window.location.href = `/shop/${shop.id}`)
-//                     }
-//                   >
-//                     View Details
-//                   </Button>
-//                 </CardActions>
-//               </Card>
-//             </Box>
-//           ))}
-//         </div>
-//       </section>
-//     </div>
-//   );
-// }
-
 "use client";
 
 import "../styles/landing.css";
@@ -194,26 +16,25 @@ import {
 import Nav from "@/components/Nav";
 import "@/loaders/spinner.css";
 import { Toaster, toast } from "react-hot-toast";
+import { useAuth } from "@/components/AuthProvider";
 
 type Category = { id: number; name: string };
 type Shop = { id: number; name: string };
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [visibleCat, setVisibleCat] = useState(5);
   const [visibleShop, setVisibleShop] = useState(5);
+  
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const authRes = await axios.get("/api/auth/is_auth");
-
-        if (authRes.status === 200) {
-          setIsAuthenticated(authRes.data.authenticated);
-          if (!authRes.data.authenticated) {
+        if (!authLoading) {
+          if (!isAuthenticated) {
             toast("Browsing as guest", { icon: "👤" });
           }
         }
@@ -236,10 +57,12 @@ export default function Home() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (!authLoading) {
+      fetchData();
+    }
+  }, [isAuthenticated, authLoading]);
 
-  if (loading) return <div className="loader" />;
+  if (loading || authLoading) return <div className="loader" />;
 
   return (
     <div className="home-root">
@@ -283,7 +106,7 @@ export default function Home() {
                         (window.location.href = `/category/${category.id}`)
                       }
                     >
-                      Shop Now &gt;
+                      Shop Now >
                     </Button>
                   </CardActions>
                 </Card>

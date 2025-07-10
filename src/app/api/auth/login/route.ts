@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const { credentials, role } = body;
     const { email, password } = credentials;
 
-    console.log("🔐 Received Login Request:", { email, password, role });
+    console.log("🔐 Received Login Request:", { email, role });
 
     // ✅ **Check for missing fields**
     if (!email || !password || !role) {
@@ -59,39 +59,16 @@ export async function POST(req: Request) {
       );
       return NextResponse.json(
         { error: `Invalid Role. Expected: '${role}', Found: '${roleCheck?.role || "None"}'` },
-        { status: 403 } // 403 Forbidden
+        { status: 403 }
       );
     }
 
     console.log("✅ Role Verified:", roleCheck.role);
 
-    // ✅ **Set Authentication Cookies**
-    const res = NextResponse.json(
-      { message: "Login Successful" },
+    return NextResponse.json(
+      { message: "Login Successful", user: user },
       { status: 200 }
     );
-
-    res.cookies.set(
-      "user",
-      JSON.stringify({ id: user.id, email: user.email }),
-      {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        sameSite: "strict",
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-      }
-    );
-
-    res.cookies.set("role", role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-
-    return res;
   } catch (error) {
     console.error("❌ Internal Server Error:", error);
     return NextResponse.json(

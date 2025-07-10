@@ -1,90 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, admin_supabase } from "./util/supabase";
-import { useAuthStore } from "./store/useAuthStore";
+import { supabase } from "./util/supabase";
 
 export async function middleware(req: NextRequest) {
-    const userCookie = req.cookies.get("user")?.value;
-    const role = req.cookies.get("role")?.value;
     const currPath = req.nextUrl.pathname;
 
-    console.log("🔹 User Cookie:", userCookie);
-    console.log("🔹 Role:", role);
     console.log("🔹 Current Path:", currPath);
 
-
-    const { role: roleFromStore, setRole } = useAuthStore.getState(); // Get Zustand role
-
-    // ✅ Sync Zustand role with Cookie
-    if (role && role !== roleFromStore) {
-        console.log(`🔄 Updating Zustand Store Role: ${roleFromStore} → ${role}`);
-        setRole(role);
-    }
-
-    const publicRoutes = ["/images/google.png",
+    const publicRoutes = [
+        "/images/google.png",
         "/login", "/register", "/register-shop",
         "/employee_login/manager", "/employee_login/productHead",
-        "/employee_login/delivery_assistant", "/restricted","/offline",
+        "/employee_login/delivery_assistant", "/restricted", "/offline",
         "/api/get_shops", "/api/get_user", "/api/auth/is_auth",
+        "/api/auth/login", "/api/auth/register", "/api/auth/logout",
+        "/api/auth/googlesignin", "/api/auth/callback", "/api/sendmail",
+        "/api/get_categories", "/api/search/products", "/api/search/categories", 
+        "/api/search/shops", "/api/get_categ_pdts"
     ];
 
-    // ✅ If on "/" and logged in, redirect to respective home page
-    if (currPath === "/") {
-        if (userCookie && role) {
-            const roleRedirects: Record<string, string> = {
-                manager: "/manager/home",
-                producthead: "/producthead/home",
-                deliveryassistant: "/deliveryassistant/home"
-            };
-
-            if (roleRedirects[role]) {
-                console.log(`🔄 Redirecting to ${roleRedirects[role]}`);
-                return NextResponse.redirect(new URL(roleRedirects[role], req.url));
-            }
-        }
-        console.log("✅ Staying on public '/' route.");
-        return NextResponse.next();
-    }
-
     // ✅ Allow Public Routes Without Authentication
-    if (publicRoutes.includes(currPath)) {
+    if (publicRoutes.includes(currPath) || currPath === "/") {
         console.log("✅ Public Route accessed");
         return NextResponse.next();
     }
 
-    // ✅ Redirect if User Not Logged In
-    if (!userCookie) {
-        console.log("❌ User not logged in. Redirecting...");
-        return NextResponse.redirect(new URL("/login?error=Please log in", req.url));
-    }
-
     try {
-        const user = JSON.parse(userCookie);
-        console.log("✅ Parsed User:", user);
+        // Get session from Supabase
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-        if (!user) {
-            return NextResponse.redirect(new URL("/login?error=Invalid user session", req.url));
+        if (error || !session?.user) {
+            console.log("❌ User not authenticated. Redirecting...");
+            return NextResponse.redirect(new URL("/login?error=Please log in", req.url));
         }
 
-        // ✅ Verify User in Supabase Auth
-        const { data: authuser, error: authError } = await admin_supabase.auth.admin.getUserById(user.id);
-
-        if (authError || !authuser) {
-            console.log("❌ Authentication failed or Network issue Please check your internet" , authError);
-            //clear cookies 
-
-            const { error: cookieError } = await supabase.auth.signOut();
-
-            req.cookies.delete("user");
-            req.cookies.delete("role");
-            
-            console.log("❌ Cookies cleared:")
-            if (cookieError) {
-                console.error("❌ Error clearing cookies:", cookieError);
-            } else {
-                console.log("✅ Cookies cleared successfully");
-            }
-            return NextResponse.redirect(new URL("/login?error=Authentication failed", req.url));
-        }
+        const user = session.user;
+        console.log("✅ Authenticated User:", user.email);
 
         // ✅ Check User Role in `ShopSync_Users`
         const { data: userData, error: userError } = await supabase
@@ -94,11 +44,11 @@ export async function middleware(req: NextRequest) {
             .single();
 
         if (!userData || userError) {
-            console.log("❌ User not found in ShopSync_Users" , userError , userData);
+            console.log("❌ User not found in ShopSync_Users", userError);
             return NextResponse.redirect(new URL("/restricted?error=User not found", req.url));
         }
 
-        console.log("✅ Verified User in ShopSync_Users:", userData);
+        console.log("✅ Verified User in ShopSync_Users:", userData.email);
 
         // ✅ Role-Based Access Control for Protected Routes
         const basePath = `/${currPath.split("/")[1]}`;
@@ -114,10 +64,18 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL("/restricted?error=Access Denied", req.url));
         }
 
-        // ✅ Ensure Managers, Product Heads, and Delivery Assistants Are Assigned to a Shop
-        if (["manager", "producthead", "deliveryassistant"].includes(userData.role) && !userData.homeLoc) {
-            console.log("❌ User role requires a shop assignment but none found.");
-            return NextResponse.redirect(new URL("/restricted?error=No shop assigned", req.url));
+        // ✅ If on "/" and logged in, redirect to respective home page
+        if (currPath === "/") {
+            const roleRedirects: Record<string, string> = {
+                manager: "/manager/home",
+                producthead: "/producthead/home",
+                deliveryassistant: "/deliveryassistant/home"
+            };
+
+            if (roleRedirects[userData.role]) {
+                console.log(`🔄 Redirecting to ${roleRedirects[userData.role]}`);
+                return NextResponse.redirect(new URL(roleRedirects[userData.role], req.url));
+            }
         }
 
         return NextResponse.next();

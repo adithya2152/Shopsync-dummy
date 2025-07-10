@@ -1,18 +1,17 @@
-// app/api/auth/google/route.ts
 import { supabase } from "@/util/supabase";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const role = searchParams.get('role'); // Optional role parameter
+    const role = searchParams.get('role') || 'customer';
     
-    console.log("🔐 Received Google Signin Request");
+    console.log("🔐 Received Google Signin Request for role:", role);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `http://localhost:3000/api/auth/callback?role=${role}`,
+        redirectTo: `${process.env.NEXTAUTH_URL}/api/auth/callback?role=${role}`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import Footer from "../components/Footer";
 import ToastHandler from "../components/Toasthandler";
+import { AuthProvider } from "../components/AuthProvider";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -28,11 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Suspense fallback={null}>
-          <ToastHandler />
-        </Suspense>
-        {children}
-        <Footer />
+        <AuthProvider>
+          <Suspense fallback={null}>
+            <ToastHandler />
+          </Suspense>
+          {children}
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

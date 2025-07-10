@@ -1,7 +1,6 @@
-// app/api/auth/callback/route.ts
 import { supabase } from "@/util/supabase";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { CreateUser } from "@/db";
 
 export async function GET(request: Request) {
   try {
@@ -37,45 +36,39 @@ export async function GET(request: Request) {
 
     // Check if user exists in your database
     const { data: profile, error: dbError } = await supabase
-      .from('profiles')
+      .from('ShopSync_Users')
       .select('*')
-      .eq('id', user.id)
+      .eq('authid', user.id)
       .single();
 
     // Create user if doesn't exist
     if (!profile) {
-      const { error: createError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: user.id,
-          email: user.email,
-          role,
-          username: user.email?.split('@')[0] || `user_${Math.random().toString(36).slice(2, 8)}`
-        }]);
+      console.log("Creating new user profile for Google OAuth user");
+      
+      const dbResponse = await CreateUser(
+        user.email?.split('@')[0] || `user_${Math.random().toString(36).slice(2, 8)}`,
+        user.email || '',
+        user.id,
+        { latitude: 0, longitude: 0 }, // Default location, user can update later
+        role
+      );
 
-      if (createError) {
-        console.error("❌ Profile Creation Failed:", createError.message);
+      if (dbResponse?.error) {
+        console.error("❌ Profile Creation Failed:", dbResponse.error);
         return NextResponse.redirect(new URL("/login?error=profile_creation", request.url));
       }
     }
 
-    // Set cookies
-    const response = NextResponse.redirect(new URL("/dashboard", request.url));
-    response.cookies.set("sb-access-token", session?.access_token || "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
+    // Redirect based on role
+    const roleRedirects: Record<string, string> = {
+      manager: "/manager/home",
+      producthead: "/producthead/home", 
+      deliveryassistant: "/deliveryassistant/home",
+      customer: "/"
+    };
 
-    response.cookies.set("sb-refresh-token", session?.refresh_token || "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
-
-    return response;
+    const redirectUrl = roleRedirects[profile?.role || role] || "/";
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
 
   } catch (err) {
     console.error("❌ Callback Error:", err);

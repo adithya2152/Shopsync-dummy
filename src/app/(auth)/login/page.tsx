@@ -6,6 +6,7 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
+import { useAuth } from "@/components/AuthProvider";
 
 interface Cred {
   email: string;
@@ -20,6 +21,13 @@ export default function Login() {
   });
 
   const router = useRouter();
+  const { user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    router.push("/");
+    return null;
+  }
 
   // ✅ Handle Input Change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +75,21 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSignIn = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    try {
+      e.preventDefault();
+      setLoading(true);
+      const res = await fetch('/api/auth/googlesignin?role=customer');
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch (error) {
+      console.error("SignIn failed:", error);
+      toast.error("Google Sign In failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       <Nav navType="landing"/>
@@ -101,6 +124,22 @@ export default function Login() {
                 New User? <a href="/register">Signup</a>
               </p>
             </form>
+
+            <div className="google-button">
+              <button
+                onClick={handleGoogleSignIn}
+                className="google-signin-btn"
+                disabled={loading}
+              >
+                <img
+                  src="/images/google.png"
+                  width={20}
+                  height={20}
+                  alt="Google"
+                />
+                Sign in with Google
+              </button>
+            </div>
           </div>
           <Toaster />
         </div>
