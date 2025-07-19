@@ -1,0 +1,15 @@
+body
+{
+  background: radial-gradient(circle, #B5E3C1 0%, #91C99D 46%);
+}
+
+/* Hide Google Translate top bar */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+/* Hide inline Google branding */
+body .goog-te-gadget {
+  top: 0px !important;
+  display: none !important;
+}
