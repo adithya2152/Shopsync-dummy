@@ -8,10 +8,10 @@ export const ShopSync_Users = pgTable("ShopSync_Users", {
     authid: uuid("authid").unique().notNull(),
     username: varchar("username").notNull(),
     email: varchar("email").notNull(),
+    Phone: varchar("Phone"),
     role: varchar("role").notNull(), // "Customer", "Manager", "ProductHead", "DeliveryAssistant"
     homeLoc: json("homeLoc"), // Stores { latitude, longitude , houseNo , street Address ,AdressLine2 , city ,  pincode }
     homeLoc2: json("homeLoc2"), // Stores { latitude, longitude , houseNo , street Address ,AdressLine2 , city ,  pincode }
-    Phone: varchar("Phone"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow(),
 });
@@ -64,6 +64,7 @@ export const ShopSync_DeliveryAssistants = pgTable("ShopSync_DeliveryAssistants"
 export const ShopSync_Categories = pgTable("ShopSync_Categories", {
     id: serial("id").primaryKey(),
     name: varchar("name").unique().notNull(),
+    imgPath: text("imgPath"),
     imgPath: text("imgPath"),
     createdAt: timestamp("createdAt").defaultNow().notNull()
 });

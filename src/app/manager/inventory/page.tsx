@@ -1,998 +1,6 @@
-// "use client";
-// import { useState, useEffect } from "react";
-// import {
-//   Container,
-//   Paper,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Typography,
-//   Button,
-//   IconButton,
-//   TextField,
-//   MenuItem,
-//   Select,
-//   FormControl,
-//   InputLabel,
-//   TableSortLabel,
-//   Alert,
-//   Box,
-//   CircularProgress,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions,
-// } from "@mui/material";
-// import AddIcon from "@mui/icons-material/Add";
-// import EditIcon from "@mui/icons-material/Edit";
-// import DeleteIcon from "@mui/icons-material/Delete";
-// import DownloadIcon from "@mui/icons-material/Download";
-// import SearchIcon from "@mui/icons-material/Search";
-// import LocalOfferIcon from "@mui/icons-material/LocalOffer"; // Import discount icon
-// import Image from "next/image";
-// import axios, { isAxiosError } from "axios";
-// import { toast } from "react-toastify";
-// import { useShopIdStore } from "@/store/ShopIdStore";
-
-// // 1. Update InventoryItem type to include discount
-// type InventoryItem = {
-//   id: number;
-//   name: string;
-//   description: string;
-//   price: number;
-//   stock: number;
-//   mnf_date: string;
-//   categoryId: number;
-//   shopId: number;
-//   imgPath: string;
-//   createdAt: string;
-//   discount?: number | null; // Discount in percentage
-// };
-
-// type Categories = {
-//   id: number;
-//   name: string;
-// };
-
-// // 2. Update CSV conversion to include discount
-// const convertToCSV = (data: InventoryItem[], categories: Categories[]) => {
-//   const headers = [
-//     "Name",
-//     "Category",
-//     "Stock",
-//     "Price",
-//     "Discount (%)",
-//     "Manufacturing Date",
-//   ];
-//   const rows = data.map((item) => [
-//     item.name,
-//     categories.find((cat) => cat.id === item.categoryId)?.name || "Unknown",
-//     item.stock,
-//     item.price,
-//     item.discount || 0, // Add discount data
-//     item.mnf_date,
-//   ]);
-//   return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
-// };
-
-// const InventoryPage = () => {
-//   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-//   const [search, setSearch] = useState<string>("");
-//   const [category, setCategory] = useState<string>("All");
-//   const [categories, setCategories] = useState<Categories[]>([
-//     { id: 0, name: "All" },
-//   ]);
-//   const [loadings, setLoadings] = useState<boolean>(false);
-//   const { shopId } = useShopIdStore();
-
-//   const [openDialog, setOpenDialog] = useState(false);
-//   const [newProduct, setNewProduct] = useState<Partial<InventoryItem>>({});
-//   const [imagePreview, setImagePreview] = useState<string | null>(null);
-//   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-//   // --- State for Discount Dialog ---
-//   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
-//   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(
-//     null
-//   );
-//   const [newDiscount, setNewDiscount] = useState<string>("");
-
-//   // --- State for Edit Dialog ---
-//   const [editDialogOpen, setEditDialogOpen] = useState(false);
-//   const [editingProduct, setEditingProduct] = useState<Partial<InventoryItem> | null>(null);
-//   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
-//   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
-
-//     // --- State for Delete Dialog ---
-//     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-//     const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
-   
-    
-//     const handleOpenEditDialog = (product: InventoryItem) => {
-//       setEditingProduct(product);
-//       setEditImagePreview(product.imgPath || null);
-//       setEditDialogOpen(true);
-//     };
-
-    
-//   const handleCloseEditDialog = () => {
-//     setEditDialogOpen(false);
-//     setEditingProduct(null);
-//     setEditImagePreview(null);
-//     setEditSelectedFile(null);
-//   };
-
-//   const handleEditFieldChange = (field: keyof InventoryItem, value: string | number | null) => {
-//       setEditingProduct(prev => (prev ? { ...prev, [field]: value } : null));
-//     };
-
-//     const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//       const file = e.target.files?.[0];
-//       if (file) {
-//         const previewUrl = URL.createObjectURL(file);
-//         setEditSelectedFile(file);
-//         setEditImagePreview(previewUrl);
-//       }
-//     };
-
-//       const handleUpdateProduct = async () => {
-//       if (!editingProduct) return;
-
-//       try {
-//         const formData = new FormData();
-//         formData.append("product", JSON.stringify(editingProduct));
-//         formData.append("shopId", String(shopId));
-//         if (editSelectedFile) {
-//           formData.append("image", editSelectedFile);
-//         }
-
-//         const response = await axios.put(`/api/manager/updateinventory`, formData, {
-//           headers: { "Content-Type": "multipart/form-data" },
-//         });
-
-//         if (response.status === 200) {
-//           toast.success("Product updated successfully");
-//           setInventory(prev => prev.map(p => p.id === editingProduct.id ? response.data : p));
-//           handleCloseEditDialog();
-//         } else {
-//           toast.error("Failed to update product.");
-//         }
-//       } catch (error) {
-//         console.error("Update Product Error:", error);
-//         toast.error("An unexpected error occurred while updating the product.");
-//       }
-//     };
-
-
-//      // --- Delete Product Functions ---
-//     const handleOpenDeleteDialog = (productId: number) => {
-//       setSelectedProductId(productId);
-//       setDeleteDialogOpen(true);
-//     };
-
-//     const handleCloseDeleteDialog = () => {
-//       setSelectedProductId(null);
-//       setDeleteDialogOpen(false);
-//     };
-
-//     const handleConfirmDelete = async () => {
-//       if (!selectedProductId) return;
-
-//       try {
-//         // **TODO: Implement your backend endpoint for deleting**
-//         const response = await axios.delete(`/api/manager/deleteinventory?productId=${selectedProductId}&shopId=${shopId}`);
-
-//         if (response.status === 200) {
-//           toast.success("Product deleted successfully!");
-//           setInventory(prev => prev.filter(p => p.id !== selectedProductId));
-//           handleCloseDeleteDialog();
-//         } else {
-//           toast.error("Failed to delete product.");
-//         }
-//       } catch (error) {
-//         toast.error("Failed to delete product.");
-//         console.error("Delete Product Error:", error);
-//       }
-//     };
-
-  
-
-//   const getCategoryName = (id: number): string => {
-//     const match = categories.find((cat) => cat.id === id);
-//     return match ? match.name : "Unknown";
-//   };
-
-//   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     const file = e.target.files?.[0];
-//     if (file) {
-//       const previewUrl = URL.createObjectURL(file);
-//       setSelectedFile(file);
-//       setImagePreview(previewUrl);
-//     }
-//   };
-
-//   const handleFieldChange = (
-//     field: keyof InventoryItem,
-//     value: string | number | Date | null
-//   ) => {
-//     setNewProduct((prev) => ({ ...prev, [field]: value }));
-//   };
-
-//   const handleAddProduct = async () => {
-//     try {
-//       const formData = new FormData();
-//       formData.append("product", JSON.stringify(newProduct));
-//       formData.append("shopId", String(shopId));
-//       if (selectedFile) {
-//         formData.append("image", selectedFile);
-//       }
-
-//       const response = await axios.post("/api/manager/addinventory", formData, {
-//         headers: { "Content-Type": "multipart/form-data" },
-//       });
-
-//       if (response.status === 200 || response.status === 201) {
-//         toast.success("Product added successfully");
-//         // Add new product to local state to avoid refetching
-//         setInventory((prev) => [response.data, ...prev]);
-//         setOpenDialog(false);
-//         setNewProduct({});
-//         setImagePreview(null);
-//         setSelectedFile(null);
-//       } else {
-//         toast.error("Failed to add product. Try again.");
-//       }
-//     } catch (error) {
-//       console.error("Add Product Error:", error);
-//       if (isAxiosError(error)) {
-//         toast.error(error.response?.data?.message || "Failed to add product.");
-//       } else {
-//         toast.error("An unexpected error occurred.");
-//       }
-//     }
-//   };
-
-//   // --- Functions for Discount Management ---
-//   const handleOpenDiscountDialog = (product: InventoryItem) => {
-//     setSelectedProduct(product);
-//     setNewDiscount(product.discount?.toString() || "");
-//     setDiscountDialogOpen(true);
-//   };
-
-//   const handleCloseDiscountDialog = () => {
-//     setDiscountDialogOpen(false);
-//     setSelectedProduct(null);
-//     setNewDiscount("");
-//   };
-
-//   const handleSaveDiscount = async () => {
-//     if (!selectedProduct) return;
-//     const discountValue = newDiscount ? parseFloat(newDiscount) : null;
-
-//     try {
-//       const response = await axios.put(
-//         `/api/manager/updatediscount?shopId=${shopId}`,
-//         {
-//           productId: selectedProduct.id,
-//           discount: discountValue,
-//         }
-//       );
-
-//       if (response.status === 200) {
-//         toast.success("Discount updated successfully!");
-//         // Update local state
-//         setInventory(
-//           inventory.map((p) =>
-//             p.id === selectedProduct.id ? { ...p, discount: discountValue } : p
-//           )
-//         );
-//         handleCloseDiscountDialog();
-//       }
-//     } catch (error) {
-//       toast.error("Failed to update discount.");
-//       console.error("Update Discount Error:", error);
-//     }
-//   };
-
-//   const handleRemoveDiscount = async () => {
-//     if (!selectedProduct) return;
-
-//     // **TODO: Implement API call to remove the discount**
-//     try {
-//       const response = await axios.put(
-//         `/api/manager/updatediscount?shopId=${shopId}`,
-//         {
-//           productId: selectedProduct.id,
-//           discount: null, // Send null to remove
-//         }
-//       );
-
-//       if (response.status === 200) {
-//         toast.success("Discount removed successfully!");
-//         // Update local state
-//         setInventory(
-//           inventory.map((p) =>
-//             p.id === selectedProduct.id ? { ...p, discount: null } : p
-//           )
-//         );
-//         handleCloseDiscountDialog();
-//       }
-//     } catch (error) {
-//       toast.error("Failed to remove discount.");
-//       console.error("Remove Discount Error:", error);
-//     }
-//   };
-
-//   const [sortConfig, setSortConfig] = useState<{
-//     key: keyof InventoryItem;
-//     direction: "asc" | "desc" | undefined;
-//   }>({
-//     key: "stock",
-//     direction: "asc",
-//   });
-
-//   const sortedInventory = [...inventory].sort((a, b) => {
-//     if (!sortConfig.direction) return 0;
-//     // Handle potentially null/undefined values for sorting
-//     const valA = a[sortConfig.key] ?? 0;
-//     const valB = b[sortConfig.key] ?? 0;
-//     return sortConfig.direction === "asc"
-//       ? valA > valB
-//         ? 1
-//         : -1
-//       : valA < valB
-//       ? 1
-//       : -1;
-//   });
-
-//   const filteredInventory = sortedInventory.filter((product) => {
-//     const matchesSearch = product.name
-//       .toLowerCase()
-//       .includes(search.toLowerCase());
-//     const productCategory = getCategoryName(product.categoryId)
-//       .toLowerCase()
-//       .trim();
-//     const selectedCategory = category.toLowerCase().trim();
-//     const matchesCategory =
-//       selectedCategory === "all" || productCategory === selectedCategory;
-//     return matchesSearch && matchesCategory;
-//   });
-
-//   const handleExportCSV = () => {
-//     if (filteredInventory.length === 0) {
-//       toast.error("No products to export.");
-//       return;
-//     }
-//     const csv = convertToCSV(filteredInventory, categories);
-//     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-//     const url = URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.setAttribute("href", url);
-//     link.setAttribute("download", `inventory_${new Date().toISOString()}.csv`);
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//   };
-
-//   const isDateCloseToToday = (dateStr: string) => {
-//     const today = new Date();
-//     const mnfDate = new Date(dateStr);
-//     const diffTime = Math.abs(today.getTime() - mnfDate.getTime());
-//     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-//     return diffDays <= 30;
-//   };
-
-//   const hasRecentMnfProducts = inventory.some((item) =>
-//     isDateCloseToToday(item.mnf_date)
-//   );
-
-//   useEffect(() => {
-//     if (shopId === 0) return;
-
-//     const fetchInventory = async () => {
-//       setLoadings(true);
-//       try {
-//         const res = await axios.get(
-//           `/api/manager/getinventory?shopId=${shopId}`
-//         );
-//         if (res.status === 200) {
-//           setInventory(res.data);
-//         }
-//       } catch (error) {
-//         console.error("Error fetching inventory:", error);
-//         toast.error("Failed to fetch inventory.");
-//       } finally {
-//         setLoadings(false);
-//       }
-//     };
-//     const fetchCat = async () => {
-//       try {
-//         const res = await axios.get("/api/get_categories");
-//         if (res.status === 200) {
-//           setCategories([{ id: 0, name: "All" }, ...res.data]);
-//         }
-//       } catch (error) {
-//         if (isAxiosError(error)) {
-//           console.error("Error fetching categories:", error.response?.data);
-//           toast.error("Failed to fetch categories.");
-//         }
-//       }
-//     };
-
-//     fetchInventory();
-//     fetchCat();
-//   }, [shopId]);
-
-//   if (loadings) {
-//     return (
-//       <Box
-//         display="flex"
-//         justifyContent="center"
-//         alignItems="center"
-//         height="100vh"
-//       >
-//         <CircularProgress />
-//       </Box>
-//     );
-//   }
-
-//   return (
-//     <Container sx={{ padding: "20px", minHeight: "90vh" }}>
-//       <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
-//         Inventory Management
-//       </Typography>
-
-//       {inventory.some((item) => item.stock < 5) && (
-//         <Alert severity="warning" sx={{ mb: 2 }}>
-//           Some products are running low on stock!
-//         </Alert>
-//       )}
-//       {hasRecentMnfProducts && (
-//         <Alert severity="info" sx={{ mb: 2 }}>
-//           Recently manufactured products detected!
-//         </Alert>
-//       )}
-
-//       <Box display="flex" justifyContent="space-between" mb={2}>
-//         <TextField
-//           label="Search Products"
-//           variant="outlined"
-//           size="small"
-//           value={search}
-//           onChange={(e) => setSearch(e.target.value)}
-//           sx={{ width: "30%" }}
-//           InputProps={{
-//             startAdornment: <SearchIcon sx={{ mr: 1 }} />,
-//           }}
-//         />
-
-//         <FormControl size="small" sx={{ width: "20%" }}>
-//           <InputLabel>Category</InputLabel>
-//           <Select
-//             value={category}
-//             onChange={(e) => setCategory(e.target.value)}
-//             label="Category"
-//           >
-//             {categories.map((cat) => (
-//               <MenuItem key={cat.id} value={cat.name}>
-//                 {cat.name}
-//               </MenuItem>
-//             ))}
-//           </Select>
-//         </FormControl>
-
-//         <Button
-//           variant="contained"
-//           color="success"
-//           startIcon={<DownloadIcon />}
-//           onClick={handleExportCSV}
-//         >
-//           Export CSV
-//         </Button>
-//       </Box>
-
-//       <TableContainer
-//         component={Paper}
-//         sx={{ borderRadius: 2, maxHeight: 500 }}
-//       >
-//         <Table stickyHeader>
-//           <TableHead sx={{ backgroundColor: "#5A9F6B" }}>
-//             {/* 3. Add Discount to Table Header */}
-//             <TableRow>
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 Image
-//               </TableCell>
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 <TableSortLabel
-//                   active={sortConfig.key === "name"}
-//                   direction={
-//                     sortConfig.key === "name" ? sortConfig.direction : "asc"
-//                   }
-//                   sx={{
-//                     color: "white !important",
-//                     "&:hover": { color: "white" },
-//                   }}
-//                   onClick={() =>
-//                     setSortConfig({
-//                       key: "name",
-//                       direction:
-//                         sortConfig.direction === "asc" ? "desc" : "asc",
-//                     })
-//                   }
-//                 >
-//                   Product
-//                 </TableSortLabel>
-//               </TableCell>
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 Category
-//               </TableCell>
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 <TableSortLabel
-//                   active={sortConfig.key === "stock"}
-//                   direction={
-//                     sortConfig.key === "stock" ? sortConfig.direction : "asc"
-//                   }
-//                   sx={{
-//                     color: "white !important",
-//                     "&:hover": { color: "white" },
-//                   }}
-//                   onClick={() =>
-//                     setSortConfig({
-//                       key: "stock",
-//                       direction:
-//                         sortConfig.direction === "asc" ? "desc" : "asc",
-//                     })
-//                   }
-//                 >
-//                   Stock
-//                 </TableSortLabel>
-//               </TableCell>
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 <TableSortLabel
-//                   active={sortConfig.key === "price"}
-//                   direction={
-//                     sortConfig.key === "price" ? sortConfig.direction : "asc"
-//                   }
-//                   sx={{
-//                     color: "white !important",
-//                     "&:hover": { color: "white" },
-//                   }}
-//                   onClick={() =>
-//                     setSortConfig({
-//                       key: "price",
-//                       direction:
-//                         sortConfig.direction === "asc" ? "desc" : "asc",
-//                     })
-//                   }
-//                 >
-//                   Price
-//                 </TableSortLabel>
-//               </TableCell>
-//               {/* New Discount Header Cell */}
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 <TableSortLabel
-//                   active={sortConfig.key === "discount"}
-//                   direction={
-//                     sortConfig.key === "discount" ? sortConfig.direction : "asc"
-//                   }
-//                   sx={{
-//                     color: "white !important",
-//                     "&:hover": { color: "white" },
-//                   }}
-//                   onClick={() =>
-//                     setSortConfig({
-//                       key: "discount",
-//                       direction:
-//                         sortConfig.direction === "asc" ? "desc" : "asc",
-//                     })
-//                   }
-//                 >
-//                   Discount
-//                 </TableSortLabel>
-//               </TableCell>
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 <TableSortLabel
-//                   active={sortConfig.key === "mnf_date"}
-//                   direction={
-//                     sortConfig.key === "mnf_date" ? sortConfig.direction : "asc"
-//                   }
-//                   sx={{
-//                     color: "white !important",
-//                     "&:hover": { color: "white" },
-//                   }}
-//                   onClick={() =>
-//                     setSortConfig({
-//                       key: "mnf_date",
-//                       direction:
-//                         sortConfig.direction === "asc" ? "desc" : "asc",
-//                     })
-//                   }
-//                 >
-//                   Mnf Date
-//                 </TableSortLabel>
-//               </TableCell>
-//               <TableCell
-//                 sx={{
-//                   color: "white",
-//                   fontWeight: "bold",
-//                   backgroundColor: "#5A9F6B",
-//                 }}
-//               >
-//                 Actions
-//               </TableCell>
-//             </TableRow>
-//           </TableHead>
-
-//           <TableBody>
-//             {filteredInventory.map((product, index) => {
-//               // Ensure price and discount are treated as numbers for calculation
-//               const numericPrice = Number(product.price);
-//               const numericDiscount = Number(product.discount ?? 0); // FIX: Default null discount to 0
-
-//               // Calculate discounted price safely
-//               const finalPrice = numericPrice * (1 - numericDiscount / 100);
-
-//               return (
-//                 <TableRow
-//                   key={product.id}
-//                   sx={{
-//                     backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
-//                     "&:hover": { backgroundColor: "#f0f0f0" },
-//                   }}
-//                 >
-//                   <TableCell>
-//                     <Image
-//                       src={
-//                         product.imgPath && product.imgPath.startsWith("http")
-//                           ? product.imgPath
-//                           : "/images/placeholder.png"
-//                       }
-//                       alt={product.name}
-//                       width={50}
-//                       height={50}
-//                       style={{ borderRadius: "5px" }}
-//                     />
-//                   </TableCell>
-//                   <TableCell>{product.name}</TableCell>
-//                   <TableCell>{getCategoryName(product.categoryId)}</TableCell>
-//                   <TableCell
-//                     sx={{
-//                       color: product.stock < 5 ? "#d32f2f" : "inherit",
-//                       fontWeight: product.stock < 5 ? "bold" : "normal",
-//                     }}
-//                   >
-//                     {product.stock}
-//                   </TableCell>
-
-//                   <TableCell>
-//                     {numericDiscount > 0 ? (
-//                       <Box>
-//                         <Typography
-//                           variant="body2"
-//                           sx={{
-//                             textDecoration: "line-through",
-//                             color: "text.secondary",
-//                           }}
-//                         >
-//                           ₹{numericPrice.toFixed(2)}
-//                         </Typography>
-//                         <Typography
-//                           variant="body1"
-//                           sx={{ color: "success.main", fontWeight: "bold" }}
-//                         >
-//                           ₹{finalPrice.toFixed(2)}
-//                         </Typography>
-//                       </Box>
-//                     ) : (
-//                       // FIX: Change currency symbol to ₹
-//                       `₹${numericPrice.toFixed(2)}`
-//                     )}
-//                   </TableCell>
-
-//                   <TableCell
-//                     sx={{
-//                       color: numericDiscount > 0 ? "green" : "inherit",
-//                       fontWeight: numericDiscount > 0 ? "bold" : "normal",
-//                     }}
-//                   >
-//                     {/* FIX: Check against null to correctly display 0% */}
-//                     {product.discount != null ? `${product.discount}%` : "N/A"}
-//                   </TableCell>
-
-//                   <TableCell
-//                     sx={{
-//                       color: isDateCloseToToday(product.mnf_date)
-//                         ? "#1976d2"
-//                         : "inherit",
-//                       fontWeight: isDateCloseToToday(product.mnf_date)
-//                         ? "bold"
-//                         : "normal",
-//                     }}
-//                   >
-//                     {new Date(product.mnf_date).toLocaleDateString()}
-//                   </TableCell>
-//                   <TableCell>
-//                     <IconButton
-//                       sx={{ color: "#f57c00", "&:hover": { color: "#ef6c00" } }}
-//                       onClick={() => handleOpenDiscountDialog(product)}
-//                     >
-//                       <LocalOfferIcon />
-//                     </IconButton>
-//                     <IconButton
-//                       sx={{ color: "#5A9F6B", "&:hover": { color: "#3a7d4a" } }}
-//                       onClick={() => handleOpenEditDialog(product)}
-//                     >
-//                       <EditIcon />
-//                     </IconButton>
-//                     <IconButton
-//                       sx={{ color: "#d32f2f", "&:hover": { color: "#9a0007" } }}
-//                       onClick={() => handleOpenDeleteDialog(product.id)}
-//                     >
-//                       <DeleteIcon />
-//                     </IconButton>
-//                   </TableCell>
-//                 </TableRow>
-//               );
-//             })}
-//           </TableBody>
-//         </Table>
-//       </TableContainer>
-
-//       {/* Floating Add Button */}
-//       <IconButton
-//         onClick={() => setOpenDialog(true)}
-//         sx={{
-//           position: "fixed",
-//           bottom: "30px",
-//           right: "30px",
-//           backgroundColor: "#5A9F6B",
-//           color: "white",
-//           width: "75px",
-//           height: "75px",
-//           borderRadius: "50%",
-//           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-//           "&:hover": { backgroundColor: "#4A8D5A" },
-//         }}
-//       >
-//         <AddIcon sx={{ fontSize: 40 }} />
-//       </IconButton>
-
-//       {/* Add Product Dialog */}
-//       <Dialog
-//         open={openDialog}
-//         onClose={() => setOpenDialog(false)}
-//         fullWidth
-//         maxWidth="sm"
-//       >
-//         <DialogTitle>Add New Inventory</DialogTitle>
-//         <DialogContent
-//           sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-//         >
-//           <TextField
-//             label="Product Name"
-//             value={newProduct?.name || ""}
-//             onChange={(e) => handleFieldChange("name", e.target.value)}
-//           />
-//           <FormControl fullWidth>
-//             <InputLabel>Category</InputLabel>
-//             <Select
-//               value={newProduct.categoryId ?? ""}
-//               onChange={(e) => handleFieldChange("categoryId", e.target.value)}
-//               label="Category"
-//             >
-//               {categories
-//                 .filter((cat) => cat.name !== "All")
-//                 .map((cat) => (
-//                   <MenuItem key={cat.id} value={cat.id}>
-//                     {cat.name}
-//                   </MenuItem>
-//                 ))}
-//             </Select>
-//           </FormControl>
-//           <TextField
-//             label="Stock"
-//             type="number"
-//             value={newProduct.stock || ""}
-//             onChange={(e) =>
-//               handleFieldChange("stock", parseInt(e.target.value))
-//             }
-//           />
-//           <TextField
-//             label="Price"
-//             type="number"
-//             value={newProduct.price || ""}
-//             onChange={(e) =>
-//               handleFieldChange("price", parseFloat(e.target.value))
-//             }
-//           />
-//           {/* Add discount field to the add product form */}
-//           <TextField
-//             label="Discount (%)"
-//             type="number"
-//             value={newProduct.discount || ""}
-//             onChange={(e) =>
-//               handleFieldChange("discount", parseFloat(e.target.value))
-//             }
-//           />
-//           <TextField
-//             label="Manufacturing Date"
-//             type="date"
-//             InputLabelProps={{ shrink: true }}
-//             value={newProduct.mnf_date || ""}
-//             onChange={(e) => handleFieldChange("mnf_date", e.target.value)}
-//           />
-//           <TextField
-//             label="Description"
-//             multiline
-//             minRows={2}
-//             value={newProduct.description || ""}
-//             onChange={(e) => handleFieldChange("description", e.target.value)}
-//           />
-//           <Button component="label" variant="outlined">
-//             {" "}
-//             Upload Image{" "}
-//             <input
-//               type="file"
-//               accept="image/*"
-//               hidden
-//               onChange={handleImageChange}
-//             />{" "}
-//           </Button>
-//           {imagePreview && (
-//             <Image src={imagePreview} alt="Preview" width={100} height={100} />
-//           )}
-//         </DialogContent>
-//         <DialogActions>
-//           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-//           <Button
-//             onClick={handleAddProduct}
-//             variant="contained"
-//             color="success"
-//           >
-//             Add Product
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-
-//       {/* 5. Add Dialog for Managing Discounts */}
-//       <Dialog
-//         open={discountDialogOpen}
-//         onClose={handleCloseDiscountDialog}
-//         fullWidth
-//         maxWidth="xs"
-//       >
-//         <DialogTitle>Manage Discount</DialogTitle>
-//         <DialogContent>
-//           <Typography variant="h6" gutterBottom>
-//             {selectedProduct?.name}
-//           </Typography>
-//           <TextField
-//             autoFocus
-//             margin="dense"
-//             label="Discount (%)"
-//             type="number"
-//             fullWidth
-//             variant="outlined"
-//             value={newDiscount}
-//             onChange={(e) => setNewDiscount(e.target.value)}
-//             InputProps={{
-//               inputProps: { min: 0, max: 100 },
-//             }}
-//           />
-//         </DialogContent>
-//         <DialogActions>
-//           <Button onClick={handleRemoveDiscount} color="error">
-//             Remove Discount
-//           </Button>
-//           <Button onClick={handleCloseDiscountDialog}>Cancel</Button>
-//           <Button
-//             onClick={handleSaveDiscount}
-//             variant="contained"
-//             color="success"
-//           >
-//             Save
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-    
-
-//       {/* Edit Dialog */}      
-//         <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} fullWidth maxWidth="sm">
-//           <DialogTitle>Edit Inventory Item</DialogTitle>
-//           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-//             {editingProduct && (
-//               <>
-//                 <TextField sx={{ mt: 2 }} label="Product Name" value={editingProduct.name || ""} onChange={(e) => handleEditFieldChange("name", e.target.value)} />
-//                 <FormControl fullWidth>
-//                   <InputLabel>Category</InputLabel>
-//                   <Select value={editingProduct.categoryId ?? ""} onChange={(e) => handleEditFieldChange("categoryId", e.target.value as number)} label="Category">
-//                     {categories.filter((cat) => cat.name !== "All").map((cat) => (<MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>))}
-//                   </Select>
-//                 </FormControl>
-//                 <TextField label="Stock" type="number" value={editingProduct.stock || ""} onChange={(e) => handleEditFieldChange("stock", parseInt(e.target.value))} />
-//                 <TextField label="Price" type="number" value={editingProduct.price || ""} onChange={(e) => handleEditFieldChange("price", parseFloat(e.target.value))} />
-//                 <TextField label="Discount (%)" type="number" value={editingProduct.discount || ""} onChange={(e) => handleEditFieldChange("discount", parseFloat(e.target.value))} />
-//                 <TextField label="Manufacturing Date" type="date" InputLabelProps={{ shrink: true }} value={editingProduct.mnf_date ? new Date(editingProduct.mnf_date).toISOString().split('T')[0] : ""} onChange={(e) => handleEditFieldChange("mnf_date", e.target.value)} />
-//                 <TextField label="Description" multiline minRows={2} value={editingProduct.description || ""} onChange={(e) => handleEditFieldChange("description", e.target.value)} />
-//                 <Button component="label" variant="outlined"> Upload New Image <input type="file" accept="image/*" hidden onChange={handleEditImageChange} /> </Button>
-//                 {editImagePreview && (<Image src={editImagePreview} alt="Preview" width={100} height={100} />)}
-//               </>
-//             )}
-//           </DialogContent>
-//           <DialogActions>
-//             <Button onClick={handleCloseEditDialog}>Cancel</Button>
-//             <Button onClick={handleUpdateProduct} variant="contained" color="primary">Save Changes</Button>
-//           </DialogActions>
-//         </Dialog>
-
-
-//         {/* --- NEW: Delete Confirmation Dialog --- */}
-//         <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} fullWidth maxWidth="xs">
-//           <DialogTitle>Confirm Deletion</DialogTitle>
-//           <DialogContent>
-//             <Typography>
-//               Are you sure you want to delete the product &quot;{inventory.find(p => p.id === selectedProductId)?.name}&quot;? This action cannot be undone.
-//             </Typography>
-//           </DialogContent>
-//           <DialogActions>
-//             <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
-//             <Button onClick={handleConfirmDelete} variant="contained" color="error">Delete</Button>
-//           </DialogActions>
-//         </Dialog>
-//     </Container>
-//   );
-// };
-
-// export default InventoryPage;
-
-
 "use client";
-import { useState, useEffect } from "react";
+
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Container,
   Paper,
@@ -1003,501 +11,314 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Button,
-  IconButton,
   TextField,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
-  TableSortLabel,
-  Alert,
+  Button,
   Box,
-  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  SelectChangeEvent,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import SearchIcon from "@mui/icons-material/Search";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer"; // Import discount icon
-import Image from "next/image";
-import axios, { isAxiosError } from "axios";
-import { toast } from "react-toastify";
+import PercentIcon from "@mui/icons-material/Percent";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 import { useShopIdStore } from "@/store/ShopIdStore";
 
-// 1. Update InventoryItem type to include discount
-type InventoryItem = {
+interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: string;
   stock: number;
-  mnf_date: string;
+  mnf_date: string | null;
+  exp_date: string | null;
   categoryId: number;
   shopId: number;
-  imgPath: string;
+  imgPath: string | null;
+  discount: string | null;
   createdAt: string;
-  discount?: number | null; // Discount in percentage
-};
+}
 
-type Categories = {
+interface Category {
   id: number;
   name: string;
-};
-
-// 2. Update CSV conversion to include discount
-const convertToCSV = (data: InventoryItem[], categories: Categories[]) => {
-  const headers = [
-    "Name",
-    "Category",
-    "Stock",
-    "Price",
-    "Discount (%)",
-    "Manufacturing Date",
-  ];
-  const rows = data.map((item) => [
-    item.name,
-    categories.find((cat) => cat.id === item.categoryId)?.name || "Unknown",
-    item.stock,
-    item.price,
-    item.discount || 0, // Add discount data
-    item.mnf_date,
-  ]);
-  return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
-};
+}
 
 const InventoryPage = () => {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [search, setSearch] = useState<string>("");
-  const [category, setCategory] = useState<string>("All");
-  const [categories, setCategories] = useState<Categories[]>([
-    { id: 0, name: "All" },
-  ]);
-  const [loadings, setLoadings] = useState<boolean>(false);
   const { shopId } = useShopIdStore();
+  const [inventory, setInventory] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredInventory, setFilteredInventory] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [addDialog, setAddDialog] = useState(false);
+  const [editDialog, setEditDialog] = useState<{ open: boolean; product: Product | null }>({
+    open: false,
+    product: null,
+  });
+  const [discountDialog, setDiscountDialog] = useState<{ open: boolean; product: Product | null }>({
+    open: false,
+    product: null,
+  });
 
-  const [openDialog, setOpenDialog] = useState(false);
-  const [newProduct, setNewProduct] = useState<Partial<InventoryItem>>({});
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    mnf_date: "",
+    exp_date: "",
+    categoryId: "",
+    image: null as File | null,
+  });
 
-  // --- State for Discount Dialog ---
-  const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(
-    null
-  );
-  const [newDiscount, setNewDiscount] = useState<string>("");
+  const [editProduct, setEditProduct] = useState({
+    id: 0,
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    mnf_date: "",
+    exp_date: "",
+    categoryId: "",
+    image: null as File | null,
+  });
 
-  // --- State for Edit Dialog ---
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] =
-    useState<Partial<InventoryItem> | null>(null);
-  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
-  const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
+  const [discountValue, setDiscountValue] = useState("");
 
-  // --- State for Delete Dialog ---
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    null
-  );
-
-  // --- Loading states for buttons ---
-  const [isAdding, setIsAdding] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isSavingDiscount, setIsSavingDiscount] = useState(false);
-  const [isRemovingDiscount, setIsRemovingDiscount] = useState(false);
-
-  const handleOpenEditDialog = (product: InventoryItem) => {
-    setEditingProduct(product);
-    setEditImagePreview(product.imgPath || null);
-    setEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setEditDialogOpen(false);
-    setEditingProduct(null);
-    setEditImagePreview(null);
-    setEditSelectedFile(null);
-  };
-
-  const handleEditFieldChange = (
-    field: keyof InventoryItem,
-    value: string | number | null
-  ) => {
-    setEditingProduct((prev) => (prev ? { ...prev, [field]: value } : null));
-  };
-
-  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setEditSelectedFile(file);
-      setEditImagePreview(previewUrl);
+  useEffect(() => {
+    if (shopId) {
+      fetchInventory();
+      fetchCategories();
     }
-  };
+  }, [shopId]);
 
-  const handleUpdateProduct = async () => {
-    if (!editingProduct) return;
-    setIsUpdating(true);
+  useEffect(() => {
+    filterInventory();
+  }, [inventory, searchTerm, categoryFilter]);
+
+  const fetchInventory = async () => {
+    if (!shopId) return;
     try {
-      const formData = new FormData();
-      formData.append("product", JSON.stringify(editingProduct));
-      formData.append("shopId", String(shopId));
-      if (editSelectedFile) {
-        formData.append("image", editSelectedFile);
-      }
-
-      const response = await axios.put(
-        `/api/manager/updateinventory`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      if (response.status === 200) {
-        toast.success("Product updated successfully");
-        setInventory((prev) =>
-          prev.map((p) => (p.id === editingProduct.id ? response.data : p))
-        );
-        handleCloseEditDialog();
-      } else {
-        toast.error("Failed to update product.");
-      }
+      setLoading(true);
+      const response = await axios.get(`/api/manager/getinventory?shopId=${shopId}`);
+      setInventory(response.data);
     } catch (error) {
-      console.error("Update Product Error:", error);
-      toast.error("An unexpected error occurred while updating the product.");
+      console.error("Error fetching inventory:", error);
+      toast.error("Failed to fetch inventory");
     } finally {
-      setIsUpdating(false);
+      setLoading(false);
     }
   };
 
-  // --- Delete Product Functions ---
-  const handleOpenDeleteDialog = (productId: number) => {
-    setSelectedProductId(productId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setSelectedProductId(null);
-    setDeleteDialogOpen(false);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedProductId) return;
-    setIsDeleting(true);
+  const fetchCategories = async () => {
     try {
-      // **TODO: Implement your backend endpoint for deleting**
-      const response = await axios.delete(
-        `/api/manager/deleteinventory?productId=${selectedProductId}&shopId=${shopId}`
-      );
-
-      if (response.status === 200) {
-        toast.success("Product deleted successfully!");
-        setInventory((prev) => prev.filter((p) => p.id !== selectedProductId));
-        handleCloseDeleteDialog();
-      } else {
-        toast.error("Failed to delete product.");
-      }
+      const response = await axios.get("/api/get_categories");
+      setCategories(response.data);
     } catch (error) {
-      toast.error("Failed to delete product.");
-      console.error("Delete Product Error:", error);
-    } finally {
-      setIsDeleting(false);
+      console.error("Error fetching categories:", error);
     }
   };
 
-  const getCategoryName = (id: number): string => {
-    const match = categories.find((cat) => cat.id === id);
-    return match ? match.name : "Unknown";
+  const filterInventory = () => {
+    const filtered = inventory.filter((item) => {
+      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = categoryFilter === "All" || item.categoryId.toString() === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+    setFilteredInventory(filtered);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setSelectedFile(file);
-      setImagePreview(previewUrl);
-    }
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
 
-  const handleFieldChange = (
-    field: keyof InventoryItem,
-    value: string | number | Date | null
-  ) => {
-    setNewProduct((prev) => ({ ...prev, [field]: value }));
+  const handleCategoryFilterChange = (e: SelectChangeEvent<string>) => {
+    setCategoryFilter(e.target.value as string);
   };
 
   const handleAddProduct = async () => {
-    setIsAdding(true);
+    if (!shopId) return;
     try {
       const formData = new FormData();
       formData.append("product", JSON.stringify(newProduct));
-      formData.append("shopId", String(shopId));
-      if (selectedFile) {
-        formData.append("image", selectedFile);
+      formData.append("shopId", shopId.toString());
+      if (newProduct.image) {
+        formData.append("image", newProduct.image);
       }
 
-      const response = await axios.post("/api/manager/addinventory", formData, {
+      await axios.post("/api/manager/addinventory", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (response.status === 200 || response.status === 201) {
-        toast.success("Product added successfully");
-        // Add new product to local state to avoid refetching
-        setInventory((prev) => [response.data, ...prev]);
-        setOpenDialog(false);
-        setNewProduct({});
-        setImagePreview(null);
-        setSelectedFile(null);
-      } else {
-        toast.error("Failed to add product. Try again.");
-      }
+      toast.success("Product added successfully");
+      setAddDialog(false);
+      setNewProduct({
+        name: "",
+        description: "",
+        price: "",
+        stock: "",
+        mnf_date: "",
+        exp_date: "",
+        categoryId: "",
+        image: null,
+      });
+      fetchInventory();
     } catch (error) {
-      console.error("Add Product Error:", error);
-      if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Failed to add product.");
-      } else {
-        toast.error("An unexpected error occurred.");
-      }
-    } finally {
-      setIsAdding(false);
+      console.error("Error adding product:", error);
+      toast.error("Failed to add product");
     }
   };
 
-  // --- Functions for Discount Management ---
-  const handleOpenDiscountDialog = (product: InventoryItem) => {
-    setSelectedProduct(product);
-    setNewDiscount(product.discount?.toString() || "");
-    setDiscountDialogOpen(true);
-  };
-
-  const handleCloseDiscountDialog = () => {
-    setDiscountDialogOpen(false);
-    setSelectedProduct(null);
-    setNewDiscount("");
-  };
-
-  const handleSaveDiscount = async () => {
-    if (!selectedProduct) return;
-    const discountValue = newDiscount ? parseFloat(newDiscount) : null;
-    setIsSavingDiscount(true);
+  const handleEditProduct = async () => {
+    if (!shopId) return;
     try {
-      const response = await axios.put(
-        `/api/manager/updatediscount?shopId=${shopId}`,
-        {
-          productId: selectedProduct.id,
-          discount: discountValue,
-        }
-      );
-
-      if (response.status === 200) {
-        toast.success("Discount updated successfully!");
-        // Update local state
-        setInventory(
-          inventory.map((p) =>
-            p.id === selectedProduct.id ? { ...p, discount: discountValue } : p
-          )
-        );
-        handleCloseDiscountDialog();
+      const formData = new FormData();
+      formData.append("product", JSON.stringify(editProduct));
+      formData.append("shopId", shopId.toString());
+      if (editProduct.image) {
+        formData.append("image", editProduct.image);
       }
+
+      await axios.put("/api/manager/updateinventory", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Product updated successfully");
+      setEditDialog({ open: false, product: null });
+      fetchInventory();
     } catch (error) {
-      toast.error("Failed to update discount.");
-      console.error("Update Discount Error:", error);
-    } finally {
-      setIsSavingDiscount(false);
+      console.error("Error updating product:", error);
+      toast.error("Failed to update product");
     }
   };
 
-  const handleRemoveDiscount = async () => {
-    if (!selectedProduct) return;
-    setIsRemovingDiscount(true);
+  const handleDeleteProduct = async (productId: number) => {
+    if (!shopId) return;
+    if (confirm("Are you sure you want to delete this product?")) {
+      try {
+        await axios.delete(`/api/manager/deleteinventory?productId=${productId}&shopId=${shopId}`);
+        toast.success("Product deleted successfully");
+        fetchInventory();
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        toast.error("Failed to delete product");
+      }
+    }
+  };
+
+  const handleUpdateDiscount = async () => {
+    if (!shopId || !discountDialog.product) return;
     try {
-      const response = await axios.put(
-        `/api/manager/updatediscount?shopId=${shopId}`,
-        {
-          productId: selectedProduct.id,
-          discount: null, // Send null to remove
-        }
-      );
+      const discount = discountValue === "" ? null : parseFloat(discountValue);
+      await axios.put(`/api/manager/updatediscount?shopId=${shopId}`, {
+        productId: discountDialog.product.id,
+        discount,
+      });
 
-      if (response.status === 200) {
-        toast.success("Discount removed successfully!");
-        // Update local state
-        setInventory(
-          inventory.map((p) =>
-            p.id === selectedProduct.id ? { ...p, discount: null } : p
-          )
-        );
-        handleCloseDiscountDialog();
-      }
+      toast.success("Discount updated successfully");
+      setDiscountDialog({ open: false, product: null });
+      setDiscountValue("");
+      fetchInventory();
     } catch (error) {
-      toast.error("Failed to remove discount.");
-      console.error("Remove Discount Error:", error);
-    } finally {
-      setIsRemovingDiscount(false);
+      console.error("Error updating discount:", error);
+      toast.error("Failed to update discount");
     }
   };
 
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof InventoryItem;
-    direction: "asc" | "desc" | undefined;
-  }>({
-    key: "stock",
-    direction: "asc",
-  });
+  const exportCSV = () => {
+    const csvContent = [
+      ["Name", "Description", "Price", "Stock", "Category", "Discount", "Created Date"],
+      ...filteredInventory.map((item) => [
+        item.name,
+        item.description,
+        item.price,
+        item.stock,
+        categories.find(c => c.id === item.categoryId)?.name || "Unknown",
+        item.discount || "0",
+        new Date(item.createdAt).toLocaleDateString(),
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
 
-  const sortedInventory = [...inventory].sort((a, b) => {
-    if (!sortConfig.direction) return 0;
-    // Handle potentially null/undefined values for sorting
-    const valA = a[sortConfig.key] ?? 0;
-    const valB = b[sortConfig.key] ?? 0;
-    return sortConfig.direction === "asc"
-      ? valA > valB
-        ? 1
-        : -1
-      : valA < valB
-      ? 1
-      : -1;
-  });
-
-  const filteredInventory = sortedInventory.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const productCategory = getCategoryName(product.categoryId)
-      .toLowerCase()
-      .trim();
-    const selectedCategory = category.toLowerCase().trim();
-    const matchesCategory =
-      selectedCategory === "all" || productCategory === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const handleExportCSV = () => {
-    if (filteredInventory.length === 0) {
-      toast.error("No products to export.");
-      return;
-    }
-    const csv = convertToCSV(filteredInventory, categories);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `inventory_${new Date().toISOString()}.csv`);
+    link.href = url;
+    link.setAttribute("download", "inventory.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const isDateCloseToToday = (dateStr: string) => {
-    const today = new Date();
-    const mnfDate = new Date(dateStr);
-    const diffTime = Math.abs(today.getTime() - mnfDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
+  const openEditDialog = (product: Product) => {
+    setEditProduct({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock.toString(),
+      mnf_date: product.mnf_date || "",
+      exp_date: product.exp_date || "",
+      categoryId: product.categoryId.toString(),
+      image: null,
+    });
+    setEditDialog({ open: true, product });
   };
 
-  const hasRecentMnfProducts = inventory.some((item) =>
-    isDateCloseToToday(item.mnf_date)
-  );
+  const openDiscountDialog = (product: Product) => {
+    setDiscountValue(product.discount || "");
+    setDiscountDialog({ open: true, product });
+  };
 
-  useEffect(() => {
-    if (shopId === 0) return;
-
-    const fetchInventory = async () => {
-      setLoadings(true);
-      try {
-        const res = await axios.get(
-          `/api/manager/getinventory?shopId=${shopId}`
-        );
-        if (res.status === 200) {
-          setInventory(res.data);
-        }
-      } catch (error) {
-        console.error("Error fetching inventory:", error);
-        toast.error("Failed to fetch inventory.");
-      } finally {
-        setLoadings(false);
-      }
-    };
-    const fetchCat = async () => {
-      try {
-        const res = await axios.get("/api/get_categories");
-        if (res.status === 200) {
-          setCategories([{ id: 0, name: "All" }, ...res.data]);
-        }
-      } catch (error) {
-        if (isAxiosError(error)) {
-          console.error("Error fetching categories:", error.response?.data);
-          toast.error("Failed to fetch categories.");
-        }
-      }
-    };
-
-    fetchInventory();
-    fetchCat();
-  }, [shopId]);
-
-  if (loadings) {
+  if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Container sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
         <CircularProgress />
-      </Box>
+      </Container>
     );
   }
 
   return (
     <Container sx={{ padding: "20px", minHeight: "90vh" }}>
-      <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold", mb: 2 }}>
         Inventory Management
       </Typography>
 
-      {inventory.some((item) => item.stock < 5) && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Some products are running low on stock!
-        </Alert>
-      )}
-      {hasRecentMnfProducts && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Recently manufactured products detected!
-        </Alert>
-      )}
-
-      <Box display="flex" justifyContent="space-between" mb={2}>
+      <Box display="flex" justifyContent="space-between" mb={2} gap={2}>
         <TextField
           label="Search Products"
           variant="outlined"
           size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
           sx={{ width: "30%" }}
+          onChange={handleSearchChange}
           InputProps={{
             startAdornment: <SearchIcon sx={{ mr: 1 }} />,
           }}
         />
 
-        <FormControl size="small" sx={{ width: "20%" }}>
-          <InputLabel>Category</InputLabel>
-          <Select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            label="Category"
-          >
-            {categories.map((cat) => (
-              <MenuItem key={cat.id} value={cat.name}>
-                {cat.name}
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel>Category Filter</InputLabel>
+          <Select value={categoryFilter} label="Category Filter" onChange={handleCategoryFilterChange}>
+            <MenuItem value="All">All Categories</MenuItem>
+            {categories.map((category) => (
+              <MenuItem key={category.id} value={category.id.toString()}>
+                {category.name}
               </MenuItem>
             ))}
           </Select>
@@ -1505,620 +326,255 @@ const InventoryPage = () => {
 
         <Button
           variant="contained"
-          color="success"
-          startIcon={<DownloadIcon />}
-          onClick={handleExportCSV}
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => setAddDialog(true)}
         >
-          Export CSV
+          Add Product
+        </Button>
+
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<FileDownloadIcon />}
+          onClick={exportCSV}
+        >
+          Export
         </Button>
       </Box>
 
-      <TableContainer
-        component={Paper}
-        sx={{ borderRadius: 2, maxHeight: 500 }}
-      >
-        <Table stickyHeader>
-          <TableHead sx={{ backgroundColor: "#5A9F6B" }}>
-            {/* 3. Add Discount to Table Header */}
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
             <TableRow>
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                Image
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                <TableSortLabel
-                  active={sortConfig.key === "name"}
-                  direction={
-                    sortConfig.key === "name" ? sortConfig.direction : "asc"
-                  }
-                  sx={{
-                    color: "white !important",
-                    "&:hover": { color: "white" },
-                  }}
-                  onClick={() =>
-                    setSortConfig({
-                      key: "name",
-                      direction:
-                        sortConfig.direction === "asc" ? "desc" : "asc",
-                    })
-                  }
-                >
-                  Product
-                </TableSortLabel>
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                Category
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                <TableSortLabel
-                  active={sortConfig.key === "stock"}
-                  direction={
-                    sortConfig.key === "stock" ? sortConfig.direction : "asc"
-                  }
-                  sx={{
-                    color: "white !important",
-                    "&:hover": { color: "white" },
-                  }}
-                  onClick={() =>
-                    setSortConfig({
-                      key: "stock",
-                      direction:
-                        sortConfig.direction === "asc" ? "desc" : "asc",
-                    })
-                  }
-                >
-                  Stock
-                </TableSortLabel>
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                <TableSortLabel
-                  active={sortConfig.key === "price"}
-                  direction={
-                    sortConfig.key === "price" ? sortConfig.direction : "asc"
-                  }
-                  sx={{
-                    color: "white !important",
-                    "&:hover": { color: "white" },
-                  }}
-                  onClick={() =>
-                    setSortConfig({
-                      key: "price",
-                      direction:
-                        sortConfig.direction === "asc" ? "desc" : "asc",
-                    })
-                  }
-                >
-                  Price
-                </TableSortLabel>
-              </TableCell>
-              {/* New Discount Header Cell */}
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                <TableSortLabel
-                  active={sortConfig.key === "discount"}
-                  direction={
-                    sortConfig.key === "discount" ? sortConfig.direction : "asc"
-                  }
-                  sx={{
-                    color: "white !important",
-                    "&:hover": { color: "white" },
-                  }}
-                  onClick={() =>
-                    setSortConfig({
-                      key: "discount",
-                      direction:
-                        sortConfig.direction === "asc" ? "desc" : "asc",
-                    })
-                  }
-                >
-                  Discount
-                </TableSortLabel>
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                <TableSortLabel
-                  active={sortConfig.key === "mnf_date"}
-                  direction={
-                    sortConfig.key === "mnf_date" ? sortConfig.direction : "asc"
-                  }
-                  sx={{
-                    color: "white !important",
-                    "&:hover": { color: "white" },
-                  }}
-                  onClick={() =>
-                    setSortConfig({
-                      key: "mnf_date",
-                      direction:
-                        sortConfig.direction === "asc" ? "desc" : "asc",
-                    })
-                  }
-                >
-                  Mnf Date
-                </TableSortLabel>
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#5A9F6B",
-                }}
-              >
-                Actions
-              </TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Price</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Stock</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Discount</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
-
           <TableBody>
-            {filteredInventory.map((product, index) => {
-              // Ensure price and discount are treated as numbers for calculation
-              const numericPrice = Number(product.price);
-              const numericDiscount = Number(product.discount ?? 0); // FIX: Default null discount to 0
-
-              // Calculate discounted price safely
-              const finalPrice = numericPrice * (1 - numericDiscount / 100);
-
-              return (
-                <TableRow
-                  key={product.id}
-                  sx={{
-                    backgroundColor: index % 2 === 0 ? "#f9f9f9" : "white",
-                    "&:hover": { backgroundColor: "#f0f0f0" },
-                  }}
-                >
-                  <TableCell>
-                    <Image
-                      src={
-                        product.imgPath && product.imgPath.startsWith("http")
-                          ? product.imgPath
-                          : "/images/placeholder.png"
-                      }
-                      alt={product.name}
-                      width={50}
-                      height={50}
-                      style={{ borderRadius: "5px" }}
-                    />
-                  </TableCell>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{getCategoryName(product.categoryId)}</TableCell>
-                  <TableCell
-                    sx={{
-                      color: product.stock < 5 ? "#d32f2f" : "inherit",
-                      fontWeight: product.stock < 5 ? "bold" : "normal",
-                    }}
-                  >
-                    {product.stock}
-                  </TableCell>
-
-                  <TableCell>
-                    {numericDiscount > 0 ? (
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            textDecoration: "line-through",
-                            color: "text.secondary",
-                          }}
-                        >
-                          ₹{numericPrice.toFixed(2)}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: "success.main", fontWeight: "bold" }}
-                        >
-                          ₹{finalPrice.toFixed(2)}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      // FIX: Change currency symbol to ₹
-                      `₹${numericPrice.toFixed(2)}`
-                    )}
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      color: numericDiscount > 0 ? "green" : "inherit",
-                      fontWeight: numericDiscount > 0 ? "bold" : "normal",
-                    }}
-                  >
-                    {/* FIX: Check against null to correctly display 0% */}
-                    {product.discount != null ? `${product.discount}%` : "N/A"}
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      color: isDateCloseToToday(product.mnf_date)
-                        ? "#1976d2"
-                        : "inherit",
-                      fontWeight: isDateCloseToToday(product.mnf_date)
-                        ? "bold"
-                        : "normal",
-                    }}
-                  >
-                    {new Date(product.mnf_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      sx={{ color: "#f57c00", "&:hover": { color: "#ef6c00" } }}
-                      onClick={() => handleOpenDiscountDialog(product)}
-                    >
-                      <LocalOfferIcon />
-                    </IconButton>
-                    <IconButton
-                      sx={{ color: "#5A9F6B", "&:hover": { color: "#3a7d4a" } }}
-                      onClick={() => handleOpenEditDialog(product)}
-                    >
+            {filteredInventory.map((item) => (
+              <TableRow key={item.id} hover>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.description}</TableCell>
+                <TableCell>₹{parseFloat(item.price).toFixed(2)}</TableCell>
+                <TableCell>{item.stock}</TableCell>
+                <TableCell>
+                  {categories.find(c => c.id === item.categoryId)?.name || "Unknown"}
+                </TableCell>
+                <TableCell>
+                  {item.discount ? `${item.discount}%` : "No discount"}
+                </TableCell>
+                <TableCell>
+                  <Tooltip title="Edit Product">
+                    <IconButton color="primary" size="small" onClick={() => openEditDialog(item)}>
                       <EditIcon />
                     </IconButton>
-                    <IconButton
-                      sx={{ color: "#d32f2f", "&:hover": { color: "#9a0007" } }}
-                      onClick={() => handleOpenDeleteDialog(product.id)}
-                    >
+                  </Tooltip>
+                  <Tooltip title="Update Discount">
+                    <IconButton color="secondary" size="small" onClick={() => openDiscountDialog(item)}>
+                      <PercentIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Product">
+                    <IconButton color="error" size="small" onClick={() => handleDeleteProduct(item.id)}>
                       <DeleteIcon />
                     </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+            {filteredInventory.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No products found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Floating Add Button */}
-      <IconButton
-        onClick={() => setOpenDialog(true)}
-        sx={{
-          position: "fixed",
-          bottom: "30px",
-          right: "30px",
-          backgroundColor: "#5A9F6B",
-          color: "white",
-          width: "75px",
-          height: "75px",
-          borderRadius: "50%",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-          "&:hover": { backgroundColor: "#4A8D5A" },
-        }}
-      >
-        <AddIcon sx={{ fontSize: 40 }} />
-      </IconButton>
-
       {/* Add Product Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Add New Inventory</DialogTitle>
-        <DialogContent
-          sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-        >
-          <TextField
-            label="Product Name"
-            value={newProduct?.name || ""}
-            onChange={(e) => handleFieldChange("name", e.target.value)}
-          />
-          <FormControl fullWidth>
-            <InputLabel>Category</InputLabel>
-            <Select
-              value={newProduct.categoryId ?? ""}
-              onChange={(e) => handleFieldChange("categoryId", e.target.value)}
-              label="Category"
-            >
-              {categories
-                .filter((cat) => cat.name !== "All")
-                .map((cat) => (
-                  <MenuItem key={cat.id} value={cat.id}>
-                    {cat.name}
+      <Dialog open={addDialog} onClose={() => setAddDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New Product</DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap={2} mt={1}>
+            <TextField
+              label="Product Name"
+              value={newProduct.name}
+              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Description"
+              value={newProduct.description}
+              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+              fullWidth
+              multiline
+              rows={3}
+            />
+            <TextField
+              label="Price"
+              type="number"
+              value={newProduct.price}
+              onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Stock"
+              type="number"
+              value={newProduct.stock}
+              onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+              fullWidth
+            />
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={newProduct.categoryId}
+                onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
+              >
+                {categories.map((category) => (
+                  <MenuItem key={category.id} value={category.id.toString()}>
+                    {category.name}
                   </MenuItem>
                 ))}
-            </Select>
-          </FormControl>
-          <TextField
-            label="Stock"
-            type="number"
-            value={newProduct.stock || ""}
-            onChange={(e) =>
-              handleFieldChange("stock", parseInt(e.target.value))
-            }
-          />
-          <TextField
-            label="Price"
-            type="number"
-            value={newProduct.price || ""}
-            onChange={(e) =>
-              handleFieldChange("price", parseFloat(e.target.value))
-            }
-          />
-          {/* Add discount field to the add product form */}
-          <TextField
-            label="Discount (%)"
-            type="number"
-            value={newProduct.discount || ""}
-            onChange={(e) =>
-              handleFieldChange("discount", parseFloat(e.target.value))
-            }
-          />
-          <TextField
-            label="Manufacturing Date"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={newProduct.mnf_date || ""}
-            onChange={(e) => handleFieldChange("mnf_date", e.target.value)}
-          />
-          <TextField
-            label="Description"
-            multiline
-            minRows={2}
-            value={newProduct.description || ""}
-            onChange={(e) => handleFieldChange("description", e.target.value)}
-          />
-          <Button component="label" variant="outlined">
-            {" "}
-            Upload Image{" "}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Manufacturing Date"
+              type="date"
+              value={newProduct.mnf_date}
+              onChange={(e) => setNewProduct({ ...newProduct, mnf_date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              label="Expiry Date"
+              type="date"
+              value={newProduct.exp_date}
+              onChange={(e) => setNewProduct({ ...newProduct, exp_date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
             <input
               type="file"
               accept="image/*"
-              hidden
-              onChange={handleImageChange}
-            />{" "}
-          </Button>
-          {imagePreview && (
-            <Image src={imagePreview} alt="Preview" width={100} height={100} />
-          )}
+              onChange={(e) => setNewProduct({ ...newProduct, image: e.target.files?.[0] || null })}
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)} disabled={isAdding}>
-            Cancel
-          </Button>
+          <Button onClick={() => setAddDialog(false)}>Cancel</Button>
           <Button
             onClick={handleAddProduct}
             variant="contained"
-            color="success"
-            disabled={isAdding}
+            disabled={!newProduct.name || !newProduct.price || !newProduct.stock || !newProduct.categoryId}
           >
-            {isAdding ? "Adding..." : "Add Product"}
+            Add Product
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* 5. Add Dialog for Managing Discounts */}
-      <Dialog
-        open={discountDialogOpen}
-        onClose={handleCloseDiscountDialog}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>Manage Discount</DialogTitle>
+      {/* Edit Product Dialog */}
+      <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, product: null })} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Product</DialogTitle>
         <DialogContent>
-          <Typography variant="h6" gutterBottom>
-            {selectedProduct?.name}
-          </Typography>
+          <Box display="flex" flexDirection="column" gap={2} mt={1}>
+            <TextField
+              label="Product Name"
+              value={editProduct.name}
+              onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Description"
+              value={editProduct.description}
+              onChange={(e) => setEditProduct({ ...editProduct, description: e.target.value })}
+              fullWidth
+              multiline
+              rows={3}
+            />
+            <TextField
+              label="Price"
+              type="number"
+              value={editProduct.price}
+              onChange={(e) => setEditProduct({ ...editProduct, price: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Stock"
+              type="number"
+              value={editProduct.stock}
+              onChange={(e) => setEditProduct({ ...editProduct, stock: e.target.value })}
+              fullWidth
+            />
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={editProduct.categoryId}
+                onChange={(e) => setEditProduct({ ...editProduct, categoryId: e.target.value })}
+              >
+                {categories.map((category) => (
+                  <MenuItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Manufacturing Date"
+              type="date"
+              value={editProduct.mnf_date}
+              onChange={(e) => setEditProduct({ ...editProduct, mnf_date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              label="Expiry Date"
+              type="date"
+              value={editProduct.exp_date}
+              onChange={(e) => setEditProduct({ ...editProduct, exp_date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setEditProduct({ ...editProduct, image: e.target.files?.[0] || null })}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialog({ open: false, product: null })}>Cancel</Button>
+          <Button onClick={handleEditProduct} variant="contained">
+            Update Product
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Discount Dialog */}
+      <Dialog open={discountDialog.open} onClose={() => setDiscountDialog({ open: false, product: null })}>
+        <DialogTitle>Update Discount</DialogTitle>
+        <DialogContent>
           <TextField
-            autoFocus
-            margin="dense"
-            label="Discount (%)"
+            label="Discount Percentage"
             type="number"
+            value={discountValue}
+            onChange={(e) => setDiscountValue(e.target.value)}
             fullWidth
-            variant="outlined"
-            value={newDiscount}
-            onChange={(e) => setNewDiscount(e.target.value)}
-            InputProps={{
-              inputProps: { min: 0, max: 100 },
-            }}
+            helperText="Leave empty to remove discount"
+            sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={handleRemoveDiscount}
-            color="error"
-            disabled={isRemovingDiscount || isSavingDiscount}
-          >
-            {isRemovingDiscount ? "Removing..." : "Remove Discount"}
-          </Button>
-          <Button
-            onClick={handleCloseDiscountDialog}
-            disabled={isRemovingDiscount || isSavingDiscount}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSaveDiscount}
-            variant="contained"
-            color="success"
-            disabled={isRemovingDiscount || isSavingDiscount}
-          >
-            {isSavingDiscount ? "Saving..." : "Save"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={handleCloseEditDialog}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Edit Inventory Item</DialogTitle>
-        <DialogContent
-          sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-        >
-          {editingProduct && (
-            <>
-              <TextField
-                sx={{ mt: 2 }}
-                label="Product Name"
-                value={editingProduct.name || ""}
-                onChange={(e) => handleEditFieldChange("name", e.target.value)}
-              />
-              <FormControl fullWidth>
-                <InputLabel>Category</InputLabel>
-                <Select
-                  value={editingProduct.categoryId ?? ""}
-                  onChange={(e) =>
-                    handleEditFieldChange("categoryId", e.target.value as number)
-                  }
-                  label="Category"
-                >
-                  {categories
-                    .filter((cat) => cat.name !== "All")
-                    .map((cat) => (
-                      <MenuItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-              <TextField
-                label="Stock"
-                type="number"
-                value={editingProduct.stock || ""}
-                onChange={(e) =>
-                  handleEditFieldChange("stock", parseInt(e.target.value))
-                }
-              />
-              <TextField
-                label="Price"
-                type="number"
-                value={editingProduct.price || ""}
-                onChange={(e) =>
-                  handleEditFieldChange("price", parseFloat(e.target.value))
-                }
-              />
-              <TextField
-                label="Discount (%)"
-                type="number"
-                value={editingProduct.discount || ""}
-                onChange={(e) =>
-                  handleEditFieldChange("discount", parseFloat(e.target.value))
-                }
-              />
-              <TextField
-                label="Manufacturing Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={
-                  editingProduct.mnf_date
-                    ? new Date(editingProduct.mnf_date)
-                        .toISOString()
-                        .split("T")[0]
-                    : ""
-                }
-                onChange={(e) =>
-                  handleEditFieldChange("mnf_date", e.target.value)
-                }
-              />
-              <TextField
-                label="Description"
-                multiline
-                minRows={2}
-                value={editingProduct.description || ""}
-                onChange={(e) =>
-                  handleEditFieldChange("description", e.target.value)
-                }
-              />
-              <Button component="label" variant="outlined">
-                {" "}
-                Upload New Image{" "}
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleEditImageChange}
-                />{" "}
-              </Button>
-              {editImagePreview && (
-                <Image
-                  src={editImagePreview}
-                  alt="Preview"
-                  width={100}
-                  height={100}
-                />
-              )}
-            </>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseEditDialog} disabled={isUpdating}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleUpdateProduct}
-            variant="contained"
-            color="primary"
-            disabled={isUpdating}
-          >
-            {isUpdating ? "Saving..." : "Save Changes"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* --- NEW: Delete Confirmation Dialog --- */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete the product &quot;
-            {inventory.find((p) => p.id === selectedProductId)?.name}&quot;?
-            This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} disabled={isDeleting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            variant="contained"
-            color="error"
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Deleting..." : "Delete"}
+          <Button onClick={() => setDiscountDialog({ open: false, product: null })}>Cancel</Button>
+          <Button onClick={handleUpdateDiscount} variant="contained">
+            Update Discount
           </Button>
         </DialogActions>
       </Dialog>
