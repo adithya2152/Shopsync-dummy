@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import Card from "@/components/dashCard"; 
 import { Typography, Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { styled } from "@mui/material/styles";
@@ -33,37 +34,52 @@ const TimeToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
   },
 }));
 
- 
-const ordersData = {
-    daily: {
-        count: 25,
-        change: 15.0,
-        changeType: 'increase' as 'increase' | 'decrease',
-        period: 'vs yesterday'
-    },
-    weekly: {
-        count: 150,
-        change: 8.1,
-        changeType: 'increase' as 'increase' | 'decrease',
-        period: 'vs last week'
-    },
-    monthly: {
-        count: 620,
-        change: 2.3,
-        changeType: 'decrease' as 'increase' | 'decrease',
-        period: 'vs last month'
-    }
-};
-
 type OrderPeriod = 'daily' | 'weekly' | 'monthly';
+
+interface OrderData {
+    count: number;
+    change: number;
+    changeType: 'increase' | 'decrease';
+    period: string;
+}
 
 export default function TotalOrders() {
     const [period, setPeriod] = useState<OrderPeriod>('monthly');
-    const [data, setData] = useState(ordersData.monthly);
+    const [data, setData] = useState<OrderData>({
+        count: 0,
+        change: 0,
+        changeType: 'increase',
+        period: 'vs last month'
+    });
+    const [loading, setLoading] = useState(true);
 
-    
     useEffect(() => {
-        setData(ordersData[period]);
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const response = await axios.get(`/api/manager/analytics?period=${period}`);
+                const { orders } = response.data;
+                
+                const periodMap = {
+                    daily: 'vs yesterday',
+                    weekly: 'vs last week',
+                    monthly: 'vs last month'
+                };
+
+                setData({
+                    count: orders.current,
+                    change: Math.abs(orders.change),
+                    changeType: orders.changeType,
+                    period: periodMap[period]
+                });
+            } catch (error) {
+                console.error('Error fetching orders data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, [period]);
 
     const handlePeriodChange = (
@@ -110,7 +126,7 @@ export default function TotalOrders() {
             <Box sx={{ textAlign: 'center', my: 2, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Typography variant="h3" component="div" sx={{ fontWeight: "bold", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ShoppingCart sx={{ fontSize: '2.8rem', marginRight: '8px' }} /> 
-                    {data.count.toLocaleString('en-US')}
+                    {loading ? '...' : data.count.toLocaleString('en-US')}
                 </Typography>
                 <ChangeIndicator />
             </Box>

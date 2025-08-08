@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import Card from "@/components/dashCard"; 
 import { Typography, Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { styled } from "@mui/material/styles";
@@ -33,38 +34,52 @@ const TimeToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
   },
 }));
 
-// --- Mock Data Simulation (replace with API calls) ---
-
-const aovData = {
-    daily: {
-        amount: 65.25,
-        change: 2.1,
-        changeType: 'decrease' as 'increase' | 'decrease',
-        period: 'vs yesterday'
-    },
-    weekly: {
-        amount: 68.33,
-        change: 1.5,
-        changeType: 'increase' as 'increase' | 'decrease',
-        period: 'vs last week'
-    },
-    monthly: {
-        amount: 71.50,
-        change: 0.5,
-        changeType: 'increase' as 'increase' | 'decrease',
-        period: 'vs last month'
-    }
-};
-
 type AovPeriod = 'daily' | 'weekly' | 'monthly';
+
+interface AovData {
+    amount: number;
+    change: number;
+    changeType: 'increase' | 'decrease';
+    period: string;
+}
 
 export default function AOV() {
     const [period, setPeriod] = useState<AovPeriod>('monthly');
-    const [data, setData] = useState(aovData.monthly);
+    const [data, setData] = useState<AovData>({
+        amount: 0,
+        change: 0,
+        changeType: 'increase',
+        period: 'vs last month'
+    });
+    const [loading, setLoading] = useState(true);
 
-    // This effect updates the displayed data when the user toggles the period.
     useEffect(() => {
-        setData(aovData[period]);
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const response = await axios.get(`/api/manager/analytics?period=${period}`);
+                const { aov } = response.data;
+                
+                const periodMap = {
+                    daily: 'vs yesterday',
+                    weekly: 'vs last week',
+                    monthly: 'vs last month'
+                };
+
+                setData({
+                    amount: aov.current,
+                    change: Math.abs(aov.change),
+                    changeType: aov.changeType,
+                    period: periodMap[period]
+                });
+            } catch (error) {
+                console.error('Error fetching AOV data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, [period]);
 
     const handlePeriodChange = (
@@ -111,7 +126,7 @@ export default function AOV() {
             <Box sx={{ textAlign: 'center', my: 2, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Typography variant="h3" component="div" sx={{ fontWeight: "bold", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ShowChart sx={{ fontSize: '2.8rem', marginRight: '8px' }} /> 
-                    ${data.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${loading ? '...' : data.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Typography>
                 <ChangeIndicator />
             </Box>

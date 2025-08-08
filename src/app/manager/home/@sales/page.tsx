@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import Card from "@/components/dashCard"; 
 import { Typography, Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { styled } from "@mui/material/styles";
@@ -81,22 +82,6 @@ interface ChartData {
   datasets: ChartDataset[];
 }
 
-// --- Mock Data Simulation ---
-const salesData = {
-    daily: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        values: [12000, 20000, 15000, 8000, 25000, 18000, 35000],
-    },
-    weekly: {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-        values: [120000, 150000, 110000, 245000],
-    },
-    monthly: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        values: [800000, 920000, 750000, 880000, 1100000, 1025000],
-    }
-};
-
 type SalesPeriod = 'daily' | 'weekly' | 'monthly';
 
 export default function Sales() {
@@ -105,26 +90,40 @@ export default function Sales() {
       labels: [],
       datasets: [],
     });
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const data = salesData[period];
-        setChartData({
-            labels: data.labels,
-            datasets: [
-                {
-                    label: 'Sales',
-                    data: data.values,
-                    fill: true,
-                    backgroundColor: 'rgba(5, 65, 22, 0.2)',
-                    borderColor: '#054116',
-                    pointBackgroundColor: '#054116',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: '#054116',
-                    tension: 0.4, // This makes the line curved
-                },
-            ],
-        });
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const response = await axios.get(`/api/manager/analytics?period=${period}`);
+                const { salesData } = response.data;
+                
+                setChartData({
+                    labels: salesData.map((item: { label: string }) => item.label),
+                    datasets: [
+                        {
+                            label: 'Sales',
+                            data: salesData.map((item: { value: number }) => item.value),
+                            fill: true,
+                            backgroundColor: 'rgba(5, 65, 22, 0.2)',
+                            borderColor: '#054116',
+                            pointBackgroundColor: '#054116',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#054116',
+                            tension: 0.4,
+                        },
+                    ],
+                });
+            } catch (error) {
+                console.error('Error fetching sales data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, [period]);
 
     const handlePeriodChange = (
@@ -211,8 +210,13 @@ export default function Sales() {
 
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Box sx={{ height: '550px', width: '100%', position: 'relative' }}>
-                    {/* MODIFIED: Removed the redundant 'as ChartOptions' */}
-                    <Line options={chartOptions} data={chartData} />
+                    {loading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                            <Typography>Loading chart data...</Typography>
+                        </Box>
+                    ) : (
+                        <Line options={chartOptions} data={chartData} />
+                    )}
                 </Box>
             </Box>
         </Card>
