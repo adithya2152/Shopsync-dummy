@@ -1,0 +1,998 @@
+{
+  "id": "d12c58fe-6573-4ac5-8623-7b089d06948b",
+  "prevId": "343610a6-d2cf-4436-a52a-30fe108c4961",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.ShopSync_Analytics": {
+      "name": "ShopSync_Analytics",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "shopId": {
+          "name": "shopId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalOrders": {
+          "name": "totalOrders",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "0"
+        },
+        "totalRevenue": {
+          "name": "totalRevenue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "0"
+        },
+        "topSellingProducts": {
+          "name": "topSellingProducts",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_Analytics_shopId_ShopSync_Shops_id_fk": {
+          "name": "ShopSync_Analytics_shopId_ShopSync_Shops_id_fk",
+          "tableFrom": "ShopSync_Analytics",
+          "tableTo": "ShopSync_Shops",
+          "columnsFrom": [
+            "shopId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_Categories": {
+      "name": "ShopSync_Categories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ShopSync_Categories_name_unique": {
+          "name": "ShopSync_Categories_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_Coupons": {
+      "name": "ShopSync_Coupons",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "shopId": {
+          "name": "shopId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "public": {
+          "name": "public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uses": {
+          "name": "uses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "maxUses": {
+          "name": "maxUses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "discountType": {
+          "name": "discountType",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discountValue": {
+          "name": "discountValue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "minAmount": {
+          "name": "minAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_Coupons_shopId_ShopSync_Shops_id_fk": {
+          "name": "ShopSync_Coupons_shopId_ShopSync_Shops_id_fk",
+          "tableFrom": "ShopSync_Coupons",
+          "tableTo": "ShopSync_Shops",
+          "columnsFrom": [
+            "shopId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ShopSync_Coupons_code_unique": {
+          "name": "ShopSync_Coupons_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_DeliveryAssistants": {
+      "name": "ShopSync_DeliveryAssistants",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "authid": {
+          "name": "authid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "shopId": {
+          "name": "shopId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_DeliveryAssistants_authid_ShopSync_Users_authid_fk": {
+          "name": "ShopSync_DeliveryAssistants_authid_ShopSync_Users_authid_fk",
+          "tableFrom": "ShopSync_DeliveryAssistants",
+          "tableTo": "ShopSync_Users",
+          "columnsFrom": [
+            "authid"
+          ],
+          "columnsTo": [
+            "authid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ShopSync_DeliveryAssistants_shopId_ShopSync_Shops_id_fk": {
+          "name": "ShopSync_DeliveryAssistants_shopId_ShopSync_Shops_id_fk",
+          "tableFrom": "ShopSync_DeliveryAssistants",
+          "tableTo": "ShopSync_Shops",
+          "columnsFrom": [
+            "shopId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ShopSync_DeliveryAssistants_authid_unique": {
+          "name": "ShopSync_DeliveryAssistants_authid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "authid"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_Managers": {
+      "name": "ShopSync_Managers",
+      "schema": "",
+      "columns": {
+        "authid": {
+          "name": "authid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "shopId": {
+          "name": "shopId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_Managers_authid_ShopSync_Users_authid_fk": {
+          "name": "ShopSync_Managers_authid_ShopSync_Users_authid_fk",
+          "tableFrom": "ShopSync_Managers",
+          "tableTo": "ShopSync_Users",
+          "columnsFrom": [
+            "authid"
+          ],
+          "columnsTo": [
+            "authid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ShopSync_Managers_shopId_ShopSync_Shops_id_fk": {
+          "name": "ShopSync_Managers_shopId_ShopSync_Shops_id_fk",
+          "tableFrom": "ShopSync_Managers",
+          "tableTo": "ShopSync_Shops",
+          "columnsFrom": [
+            "shopId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "ShopSync_Managers_pkey": {
+          "name": "ShopSync_Managers_pkey",
+          "columns": [
+            "authid",
+            "shopId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_OrderItems": {
+      "name": "ShopSync_OrderItems",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "productId": {
+          "name": "productId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "rating": {
+          "name": "rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_OrderItems_orderId_ShopSync_Orders_id_fk": {
+          "name": "ShopSync_OrderItems_orderId_ShopSync_Orders_id_fk",
+          "tableFrom": "ShopSync_OrderItems",
+          "tableTo": "ShopSync_Orders",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ShopSync_OrderItems_productId_ShopSync_Products_id_fk": {
+          "name": "ShopSync_OrderItems_productId_ShopSync_Products_id_fk",
+          "tableFrom": "ShopSync_OrderItems",
+          "tableTo": "ShopSync_Products",
+          "columnsFrom": [
+            "productId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_Orders": {
+      "name": "ShopSync_Orders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "customerId": {
+          "name": "customerId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "shopId": {
+          "name": "shopId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deliveryAssistantId": {
+          "name": "deliveryAssistantId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Pending'"
+        },
+        "estimatedDelivery": {
+          "name": "estimatedDelivery",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actualDelivery": {
+          "name": "actualDelivery",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "DelLoc": {
+          "name": "DelLoc",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalAmount": {
+          "name": "totalAmount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "paymentStatus": {
+          "name": "paymentStatus",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Pending'"
+        },
+        "paymentMethod": {
+          "name": "paymentMethod",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Cash'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "d_rating": {
+          "name": "d_rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plt_fee": {
+          "name": "plt_fee",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0'"
+        },
+        "del_fee": {
+          "name": "del_fee",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0'"
+        },
+        "tax": {
+          "name": "tax",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_Orders_customerId_ShopSync_Users_authid_fk": {
+          "name": "ShopSync_Orders_customerId_ShopSync_Users_authid_fk",
+          "tableFrom": "ShopSync_Orders",
+          "tableTo": "ShopSync_Users",
+          "columnsFrom": [
+            "customerId"
+          ],
+          "columnsTo": [
+            "authid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ShopSync_Orders_shopId_ShopSync_Shops_id_fk": {
+          "name": "ShopSync_Orders_shopId_ShopSync_Shops_id_fk",
+          "tableFrom": "ShopSync_Orders",
+          "tableTo": "ShopSync_Shops",
+          "columnsFrom": [
+            "shopId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ShopSync_Orders_deliveryAssistantId_ShopSync_DeliveryAssistants_authid_fk": {
+          "name": "ShopSync_Orders_deliveryAssistantId_ShopSync_DeliveryAssistants_authid_fk",
+          "tableFrom": "ShopSync_Orders",
+          "tableTo": "ShopSync_DeliveryAssistants",
+          "columnsFrom": [
+            "deliveryAssistantId"
+          ],
+          "columnsTo": [
+            "authid"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_PlatformSettings": {
+      "name": "ShopSync_PlatformSettings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ShopSync_PlatformSettings_key_unique": {
+          "name": "ShopSync_PlatformSettings_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_ProductHead_Shops": {
+      "name": "ShopSync_ProductHead_Shops",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "productHeadId": {
+          "name": "productHeadId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "shopId": {
+          "name": "shopId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_ProductHead_Shops_productHeadId_ShopSync_ProductHeads_authid_fk": {
+          "name": "ShopSync_ProductHead_Shops_productHeadId_ShopSync_ProductHeads_authid_fk",
+          "tableFrom": "ShopSync_ProductHead_Shops",
+          "tableTo": "ShopSync_ProductHeads",
+          "columnsFrom": [
+            "productHeadId"
+          ],
+          "columnsTo": [
+            "authid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ShopSync_ProductHead_Shops_shopId_ShopSync_Shops_id_fk": {
+          "name": "ShopSync_ProductHead_Shops_shopId_ShopSync_Shops_id_fk",
+          "tableFrom": "ShopSync_ProductHead_Shops",
+          "tableTo": "ShopSync_Shops",
+          "columnsFrom": [
+            "shopId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_ProductHeads": {
+      "name": "ShopSync_ProductHeads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "authid": {
+          "name": "authid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_ProductHeads_authid_ShopSync_Users_authid_fk": {
+          "name": "ShopSync_ProductHeads_authid_ShopSync_Users_authid_fk",
+          "tableFrom": "ShopSync_ProductHeads",
+          "tableTo": "ShopSync_Users",
+          "columnsFrom": [
+            "authid"
+          ],
+          "columnsTo": [
+            "authid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ShopSync_ProductHeads_authid_unique": {
+          "name": "ShopSync_ProductHeads_authid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "authid"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_Products": {
+      "name": "ShopSync_Products",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stock": {
+          "name": "stock",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mnf_date": {
+          "name": "mnf_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exp_date": {
+          "name": "exp_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "categoryId": {
+          "name": "categoryId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "shopId": {
+          "name": "shopId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imgPath": {
+          "name": "imgPath",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discount": {
+          "name": "discount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ShopSync_Products_categoryId_ShopSync_Categories_id_fk": {
+          "name": "ShopSync_Products_categoryId_ShopSync_Categories_id_fk",
+          "tableFrom": "ShopSync_Products",
+          "tableTo": "ShopSync_Categories",
+          "columnsFrom": [
+            "categoryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ShopSync_Products_shopId_ShopSync_Shops_id_fk": {
+          "name": "ShopSync_Products_shopId_ShopSync_Shops_id_fk",
+          "tableFrom": "ShopSync_Products",
+          "tableTo": "ShopSync_Shops",
+          "columnsFrom": [
+            "shopId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_Shops": {
+      "name": "ShopSync_Shops",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShopSync_Users": {
+      "name": "ShopSync_Users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "authid": {
+          "name": "authid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "homeLoc": {
+          "name": "homeLoc",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "homeLoc2": {
+          "name": "homeLoc2",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ShopSync_Users_authid_unique": {
+          "name": "ShopSync_Users_authid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "authid"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

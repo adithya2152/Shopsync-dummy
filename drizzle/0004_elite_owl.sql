@@ -1,0 +1,1 @@
+ALTER TABLE "ShopSync_PlatformSettings" ALTER COLUMN "value" DROP NOT NULL;

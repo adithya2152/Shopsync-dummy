@@ -1,0 +1,264 @@
+/* Full-screen center alignment */
+.login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Glassmorphic Login Box */
+.login-container {
+    width: 400px; /* Reduced size */
+    padding: 30px; /* Adjusted padding */
+    background: rgba(76, 155, 99, 0.7); /* Semi-transparent green */
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    color: white;
+    backdrop-filter: blur(15px); /* Blur effect applied to the whole container */
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Title Styling */
+.login-container h1 {
+    font-size: 38px; /* Increased font size */
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Form Inputs */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px; /* Adjusted spacing */
+    align-items: center;
+}
+
+.login-form label {
+    font-size: 20px; /* Increased font size */
+    align-self: flex-start;
+    margin-left: 12px;
+}
+
+/* Input Fields with Clean Inset Effect */
+.login-form input {
+    width: 93%; /* Adjusted width */
+    padding: 14px; /* Adjusted padding */
+    border: none;
+    border-radius: 12px;
+    font-size: 20px; /* Increased font size */
+    background: rgba(255, 255, 255, 0.2); /* Slight transparency */
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), 
+                inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    outline: none;
+    color: white;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px); /* Additional blur effect */
+}
+
+.login-form input::placeholder {
+    font-size: 18px; /* Increased placeholder font size */
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.login-form input:focus {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Login Button */
+.login-form button {
+    width: 100%;
+    padding: 16px; /* Adjusted padding */
+    font-size: 22px; /* Increased font size */
+    background: linear-gradient(to right, #007bff, #0056b3);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.login-form button:hover {
+    background: linear-gradient(to right, #0056b3, #004080);
+    transform: scale(1.05);
+}
+
+/* Sign Up Link */
+.login-form p {
+    font-size: 18px; /* Increased font size */
+}
+
+.login-form a {
+    font-size: 18px; /* Increased font size */
+    color: #ffd700; /* Yellow shade */
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.login-form a:hover {
+    text-decoration: underline;
+}
+
+.email , .otp{
+    display: flex;
+    align-items: center; /* Ensures vertical alignment */
+}
+
+ 
+.email button  , .otp button {
+    flex: 1;
+    margin-left: 10px;
+    padding: 12px 15px;
+    font-size: 16px;
+    background: linear-gradient(to right, #4c9b63, #327a2f); 
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.email button:hover , .otp button:hover {
+    background: linear-gradient(to right, #327a2f, #4c9b63);  
+    transform: scale(1.05);  
+}
+
+
+/* 📌 Dialog Centering */
+.MuiDialog-root {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.location-options
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 📌 Dialog Box */
+.MuiDialog-paper {
+    background: rgba(255, 255, 255, 0.9); /* White with transparency */
+    border-radius: 16px;
+    padding: 20px;
+    width: 5000px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+
+}
+
+/* 📌 Search Box Styling */
+.search-box {
+    text-align: center  ;
+    width: 100%;
+    margin-bottom: 10px;
+    font-size: 24px;
+    color: black;
+    margin-right: 20px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #004d40;
+    outline: none;
+    background: rgba(255, 255, 255, 0.8);
+    color: black;
+}
+
+/* 📌 Location Dropdown */
+.location-dropdown {
+    width: 100%;
+    background: rgba(76, 175, 80, 0.9); /* Green shade */
+    list-style: none;
+    padding: 8px;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 5px;
+}
+
+.location-dropdown li {
+    padding: 10px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.location-dropdown li:hover {
+    background: #388e3c;
+}
+
+/* 📌 "Use Current Location" Button */
+.current-location-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background: #43a047; /* Green shade */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.current-location-btn:hover {
+    background: #388e3c;
+}
+
+/* 📌 Dialog Action Buttons */
+.dialog-actions {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 10px;
+}
+
+.dialog-actions button {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* 📌 Cancel Button */
+.dialog-actions button:nth-child(1) {
+    background: #e74c3c;
+    color: white;
+}
+
+.dialog-actions button:nth-child(1):hover {
+    background: #c0392b;
+}
+
+/* 📌 Skip Button */
+.dialog-actions button:nth-child(2) {
+    background: #f39c12;
+    color: black;
+}
+
+.dialog-actions button:nth-child(2):hover {
+    background: #d68910;
+}
+
+/* 📌 Confirm Button */
+.dialog-actions button:nth-child(3) {
+    background: #2ecc71;
+    color: white;
+}
+
+.dialog-actions button:nth-child(3):hover {
+    background: #27ae60;
+}
