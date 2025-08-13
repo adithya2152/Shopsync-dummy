@@ -7,6 +7,7 @@ import ToastHandler from "../components/Toasthandler";
 import PWAWrapper from "../components/PWAWrapper";
 import NetworkStatus from "../components/NetworkStatus";
 import OfflineIndicator from "../components/OfflineIndicator";
+import PushNotificationManager from "../components/PushNotificationManager";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -82,6 +83,7 @@ export default function RootLayout({
             <ToastHandler />
             <NetworkStatus />
             <OfflineIndicator />
+            <PushNotificationManager />
           </Suspense>
           {children}
           <Footer />
