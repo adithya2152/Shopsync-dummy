@@ -19,6 +19,7 @@ import Nav from "@/components/Nav";
 import CouponDisplaySection, { Coupon } from "@/components/CouponSection";
 import "@/loaders/spinner.css";
 import { Toaster, toast } from "react-hot-toast";
+import PullToRefresh from "@/components/PullToRefresh";
 
 type Category = { id: number; name: string, imgPath?: string };
 type Shop = { id: number; name: string };
@@ -70,118 +71,140 @@ export default function Home() {
     fetchData();
   }, []);
 
+  const handleRefresh = async () => {
+    // Refresh data when user pulls to refresh
+    try {
+      const [catRes, shopRes, couponRes] = await Promise.all([
+        axios.get("/api/get_categories"),
+        axios.get("/api/get_shops"),
+        axios.get("/api/coupons")
+      ]);
+
+      if (couponRes.status === 200 && couponRes.data && couponRes.data.length > 0) {
+        setCoupons(couponRes.data);
+      }
+      if (catRes.status === 200) setCategories(catRes.data);
+      if (shopRes.status === 200) setShops(shopRes.data);
+      
+      toast.success("Content refreshed!");
+    } catch (error) {
+      console.error("Refresh error:", error);
+      toast.error("Failed to refresh content");
+    }
+  };
+
   if (loading) return <div className="loader" />;
 
   return (
-    <div className="home-root">
-      <Toaster position="top-center" reverseOrder={false} />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="home-root">
+        <Toaster position="top-center" reverseOrder={false} />
 
-      <Nav navType={isAuthenticated ? "customer" : "landing"} />
+        <Nav navType={isAuthenticated ? "customer" : "landing"} />
 
-      {/* Hero Section */}
-      <section className="welcome-section">
-        <Container>
-          <Typography variant="h3" className="hero-title">
-            Welcome to <strong>ShopSync</strong>
-          </Typography>
-          <Typography variant="h6" className="hero-subtitle">
-            Your One Stop Shop for All Your Shopping Needs
-          </Typography>
-        </Container>
-      </section>
+        {/* Hero Section */}
+        <section className="welcome-section">
+          <Container>
+            <Typography variant="h3" className="hero-title">
+              Welcome to <strong>ShopSync</strong>
+            </Typography>
+            <Typography variant="h6" className="hero-subtitle">
+              Your One Stop Shop for All Your Shopping Needs
+            </Typography>
+          </Container>
+        </section>
 
-      {coupons.length > 0 && (
-      <section className="Offers">
-        <CouponDisplaySection coupons={coupons} />
-      </section>
-      )}
+        {coupons.length > 0 && (
+        <section className="Offers">
+          <CouponDisplaySection coupons={coupons} />
+        </section>
+        )}
 
+        {/* Categories Section */}
+        <section className="Offers">
+          <Container>
+            <Typography variant="h4" mb={5} className="section-title">Categories</Typography>
+            <Grid container spacing={3}>
+              {categories.slice(0, visibleCat).map((category) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
+                  <Card raised sx={cardStyle}>
+                    <CardContent sx={{ textAlign: "center" }}>
+                      <Typography variant="h6">{category.name}</Typography>
+                      <CardMedia
+                      sx={{height: 120, backgroundSize: "fit", backgroundColor: "#ffffff", borderRadius: "8px"}}
+                      image={category.imgPath || "/images/placeholder.png"}
+                      />   
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary", mt: 1 }}
+                      >
+                        Explore our {category.name} collection
+                      </Typography>
+                    </CardContent>
+                    <CardActions sx={{ justifyContent: "center" }}>
+                      <Button
+                        size="small"
+                        onClick={() =>
+                          (window.location.href = `/category/${category.id}`)
+                        }
+                      >
+                        Shop Now >
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
 
-      {/* Categories Section */}
-      <section className="Offers">
-        <Container>
-          <Typography variant="h4" mb={5} className="section-title">Categories</Typography>
-          <Grid container spacing={3}>
-            {categories.slice(0, visibleCat).map((category) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
-                <Card raised sx={cardStyle}>
-                  <CardContent sx={{ textAlign: "center" }}>
-                    <Typography variant="h6">{category.name}</Typography>
-                    <CardMedia
-                    sx={{height: 120, backgroundSize: "fit", backgroundColor: "#ffffff", borderRadius: "8px"}}
-                    image={category.imgPath || "/images/placeholder.png"}
-                    />   
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary", mt: 1 }}
-                    >
-                      Explore our {category.name} collection
-                    </Typography>
-                  </CardContent>
-                  <CardActions sx={{ justifyContent: "center" }}>
-                    <Button
-                      size="small"
-                      onClick={() =>
-                        (window.location.href = `/category/${category.id}`)
-                      }
-                    >
-                      Shop Now &gt;
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+            {visibleCat < categories.length && (
+              <Box textAlign="center" mt={2}>
+                <Button variant="outlined" onClick={() => setVisibleCat(visibleCat + 5)}>
+                  Explore More Categories
+                </Button>
+              </Box>
+            )}
+          </Container>
+        </section>
 
-          {visibleCat < categories.length && (
-            <Box textAlign="center" mt={2}>
-              <Button variant="outlined" onClick={() => setVisibleCat(visibleCat + 5)}>
-                Explore More Categories
-              </Button>
-            </Box>
-          )}
-        </Container>
-      </section>
+        
+        {/* Shops Section */}
+        <section className="Offers">
+          <Container>
+            <Typography variant="h4" className="section-title">Shops</Typography>
+            <Grid container spacing={3}>
+              {shops.slice(0, visibleShop).map((shop) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={shop.id}>
+                  <Card raised sx={cardStyle}>
+                    <CardContent sx={{ textAlign: "center", minHeight: 130 }}>
+                      <Typography variant="h6">{shop.name}</Typography>
+                      <Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
+                        Discover great deals from {shop.name}
+                      </Typography>
+                    </CardContent>
+                    <CardActions sx={{ justifyContent: "center" }}>
+                      <Button
+                        size="small"
+                        onClick={() => (window.location.href = `/shop/${shop.id}`)}
+                      >
+                        View Details
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
 
-      
-
-      {/* Shops Section */}
-      <section className="Offers">
-        <Container>
-          <Typography variant="h4" className="section-title">Shops</Typography>
-          <Grid container spacing={3}>
-            {shops.slice(0, visibleShop).map((shop) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={shop.id}>
-                <Card raised sx={cardStyle}>
-                  <CardContent sx={{ textAlign: "center", minHeight: 130 }}>
-                    <Typography variant="h6">{shop.name}</Typography>
-                    <Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
-                      Discover great deals from {shop.name}
-                    </Typography>
-                  </CardContent>
-                  <CardActions sx={{ justifyContent: "center" }}>
-                    <Button
-                      size="small"
-                      onClick={() => (window.location.href = `/shop/${shop.id}`)}
-                    >
-                      View Details
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-
-          {visibleShop < shops.length && (
-            <Box textAlign="center" mt={2}>
-              <Button variant="outlined" onClick={() => setVisibleShop(visibleShop + 5)}>
-                Explore More Shops
-              </Button>
-            </Box>
-          )}
-        </Container>
-      </section>
-    </div>
+            {visibleShop < shops.length && (
+              <Box textAlign="center" mt={2}>
+                <Button variant="outlined" onClick={() => setVisibleShop(visibleShop + 5)}>
+                  Explore More Shops
+                </Button>
+              </Box>
+            )}
+          </Container>
+        </section>
+      </div>
+    </PullToRefresh>
   );
 }
 

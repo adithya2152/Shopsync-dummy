@@ -36,6 +36,8 @@ interface EnrichedCartItem {
   price: number;
   stock: number;
 }
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { offlineStorage } from "@/utils/offlineStorage";
 
 type Address = {
   id: string;
@@ -70,6 +72,8 @@ export default function CheckoutPage() {
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
+  
+  const { isOnline } = useNetworkStatus();
   
   // FIX: Ref to track the initial mount and prevent the update effect from running on load.
   const isInitialMount = useRef(true);
@@ -242,17 +246,37 @@ export default function CheckoutPage() {
     setLoading(true);
     if (paymentMethod !== "cod") {
       toast.error("Only Cash on Delivery is supported at this time.");
+      setLoading(false);
       return;
     }
     const selectedAddressObject = addresses.find(addr => addr.id === selectedAddressId);
     if (!selectedAddressObject) {
       toast.error("Please select a valid delivery address.");
+      setLoading(false);
       return;
     }
     
     const { id, ...addressToSend } = selectedAddressObject; // eslint-disable-line
 
     try {
+        if (!isOnline) {
+          // Store order offline
+          const offlineOrderId = offlineStorage.storeOfflineOrder({
+            cart,
+            shopId: shopId!,
+            address: addressToSend,
+            paymentMethod,
+            coupon: couponCode
+          });
+          
+          setCart([]);
+          localStorage.removeItem("cart");
+          toast.success(`Order saved offline! It will be processed when you're back online. Offline Order ID: ${offlineOrderId}`);
+          setOrderId(parseInt(offlineOrderId.split('-')[1]));
+          setLoading(false);
+          return;
+        }
+
         const resp = await axios.post("/api/place_order", { cart, shopId, coupon: couponCode, address: addressToSend, paymentMethod });
         if (resp.status === 201) {
             const orderId = resp.data.orderId;
@@ -262,11 +286,11 @@ export default function CheckoutPage() {
             setOrderId(orderId);
         }
     } catch (error) {
-        toast.error("Failed to place order. Please try again.");
+        toast.error(isOnline ? "Failed to place order. Please try again." : "Order saved offline for later processing.");
         console.error("Place order error:", error);
     }
     setLoading(false);
-  }, [cart, shopId, couponCode, selectedAddressId, addresses, paymentMethod]);
+  }, [cart, shopId, couponCode, selectedAddressId, addresses, paymentMethod, isOnline]);
   
   const formatAddress = (addr: Address) => {
     return [addr.house_number, addr.street_address, addr.address_line2, addr.city, addr.pin_code].filter(Boolean).join(', ');
