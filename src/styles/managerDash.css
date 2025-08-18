@@ -1,0 +1,21 @@
+.Manager-grid
+{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+    margin-right: 25px;
+    margin-top: 20px;
+}
+ 
+ 
+
+.Manager-grid .item4
+{
+    
+    grid-area: 2/1/4/3 ;
+
+}
+
+ 

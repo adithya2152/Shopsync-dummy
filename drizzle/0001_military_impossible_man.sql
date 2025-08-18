@@ -1,0 +1,1 @@
+ALTER TABLE "ShopSync_Users" ALTER COLUMN "homeLoc" DROP NOT NULL;

@@ -1,0 +1,19 @@
+body
+{
+  background: radial-gradient(circle, #B5E3C1 0%, #91C99D 46%);
+}
+
+/*
+  More aggressive rules to hide the Google Translate UI
+*/
+.goog-te-banner-frame.skiptranslate, 
+#goog-gt-tt, 
+.goog-te-balloon-frame {
+    display: none !important;
+    visibility: hidden !important;
+} 
+
+body {
+    top: 0px !important;
+    position: static !important;
+}

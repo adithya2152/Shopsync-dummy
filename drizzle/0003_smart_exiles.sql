@@ -1,0 +1,1 @@
+ALTER TABLE "ShopSync_PlatformSettings" ADD CONSTRAINT "ShopSync_PlatformSettings_key_unique" UNIQUE("key");

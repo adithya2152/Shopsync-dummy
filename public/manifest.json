@@ -1,0 +1,82 @@
+{
+    "short_name": "ShopSync",
+    "name": "ShopSync",
+    "description": "Delivery Under 25 mins",
+    "icons": [
+        {
+            "src": "icons/icon-36x36.png",
+            "sizes": "36x36",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-maskable-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/icon-maskable-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "start_url": "/",
+    "background_color": "#FFFFFF",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "theme_color": "#FFFFFF",
+    "categories": ["shopping", "food", "lifestyle"],
+    "shortcuts": [
+        {
+            "name": "Browse Categories",
+            "short_name": "Categories",
+            "description": "Browse product categories",
+            "url": "/?utm_source=homescreen&utm_medium=shortcut&utm_campaign=categories",
+            "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "My Orders",
+            "short_name": "Orders",
+            "description": "View your order history",
+            "url": "/history?utm_source=homescreen&utm_medium=shortcut&utm_campaign=orders",
+            "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "Cart",
+            "short_name": "Cart",
+            "description": "View your shopping cart",
+            "url": "/checkout?utm_source=homescreen&utm_medium=shortcut&utm_campaign=cart",
+            "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+        }
+    ],
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": "ShopSync"
+}

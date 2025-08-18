@@ -1,0 +1,142 @@
+/* PWA-specific styles */
+
+/* Hide elements when running as installed PWA */
+.pwa-installed .install-banner {
+  display: none !important;
+}
+
+/* Offline mode styles */
+.offline {
+  filter: grayscale(0.3);
+}
+
+.offline .network-dependent {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Online mode styles */
+.online .network-dependent {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+/* Install prompt styles */
+.install-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 16px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 90vw;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* iOS-specific styles */
+.ios-install-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(145deg, rgba(0, 122, 255, 0.95), rgba(0, 122, 255, 0.85));
+  color: white;
+  padding: 16px;
+  text-align: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+/* Standalone mode adjustments */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* Hide browser UI elements */
+  .browser-only {
+    display: none !important;
+  }
+}
+
+/* Loading states for offline content */
+.offline-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Update available indicator */
+.update-available {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #2196F3;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  z-index: 1000;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.6);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  }
+}
+
+/* Responsive PWA styles */
+@media (max-width: 768px) {
+  .install-prompt {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: none;
+  }
+}
+
+/* Dark mode support for PWA elements */
+@media (prefers-color-scheme: dark) {
+  .install-prompt {
+    background: linear-gradient(145deg, rgba(30, 30, 30, 0.95), rgba(30, 30, 30, 0.85));
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

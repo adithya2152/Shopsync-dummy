@@ -1,0 +1,45 @@
+/*
+ * The main container for the carousel.
+ * It hides the overflowing content and adds a gradient mask
+ * to create a smooth fade-in/fade-out effect at the edges.
+ */
+.marquee-container {
+  overflow: hidden;
+  width: 100%;
+  padding: 20px 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+/*
+ * The scrolling element that holds all the coupon cards.
+ * It uses a CSS animation to scroll infinitely.
+ * The animation-duration is set dynamically via an inline style in the React component.
+ */
+.marquee {
+  display: flex;
+  /* The animation properties are broken out for clarity */
+  animation-name: marquee-animation;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Pause the animation when the user hovers over the carousel */
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+/*
+ * The keyframes for the scrolling animation.
+ * It translates the marquee from its starting position (0)
+ * to the halfway point (-50%). Since the content is duplicated,
+ * this creates a perfect, seamless loop.
+ */
+@keyframes marquee-animation {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
